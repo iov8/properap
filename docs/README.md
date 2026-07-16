@@ -10,6 +10,8 @@ This directory contains the approved planning documents for the SteadFast platfo
 - [Roles and Permissions Matrix v0.1 - technical source](./SteadFast_Roles_and_Permissions_Matrix_v0.1.md)
 - [Listing Workflow Specification v0.1](./SteadFast_Listing_Workflow_Specification_v0.1.docx)
 - [Listing Workflow Specification v0.1 - technical source](./SteadFast_Listing_Workflow_Specification_v0.1.md)
+- [Database Design v0.1](./SteadFast_Database_Design_v0.1.docx)
+- [Database Design v0.1 - technical source](./SteadFast_Database_Design_v0.1.md)
 - [Deployment Reference](./DEPLOYMENT.md)
 
 ## Business planning
@@ -20,7 +22,6 @@ This directory contains the approved planning documents for the SteadFast platfo
 ## Documentation to add during implementation
 
 - System architecture and deployment guide
-- Database schema and Row Level Security policy guide
 - API and international listing-feed integration guide
 - Operations, monitoring, backup, and recovery guide
 - Developer onboarding and release process
