@@ -1,0 +1,73 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  application:
+    name: Application checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci-placeholder
+      NEXT_PUBLIC_APP_URL: https://example.invalid
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20.19.5
+          cache: npm
+
+      - name: Install pinned dependencies
+        run: npm ci
+
+      - name: Lint, type-check, and build
+        run: npm run ci
+
+  database:
+    name: Database migrations and pgTAP
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20.19.5
+          cache: npm
+
+      - name: Install pinned dependencies
+        run: npm ci
+
+      - name: Start isolated Supabase stack
+        run: npx supabase start
+
+      - name: Rebuild database from migrations and run pgTAP
+        run: npm run db:verify
+
+      - name: Show Supabase diagnostics after failure
+        if: failure()
+        run: npx supabase status || true
+
+      - name: Stop Supabase
+        if: always()
+        run: npx supabase stop --no-backup

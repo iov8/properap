@@ -1,0 +1,2 @@
+-- Deterministic seed data will be added with the first identity and brokerage
+-- migrations. Never place production or client data in this file.
