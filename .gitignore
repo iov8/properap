@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Next.js and build output
+.next/
+out/
+build/
+dist/
+coverage/
+output/
+.playwright-cli/
+*.tsbuildinfo
+
+# Environment files contain deployment secrets.
+.env
+.env.*
+!.env.example
+
+# Vercel local project metadata
+.vercel/
+
+# Supabase local development state
+supabase/.branches/
+supabase/.temp/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Generated document previews and temporary artifacts
+tmp_doc_render/
+tmp_docx_render/
+tmp_pdf_render/
+*.tmp

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">SteadFast Realty</title>
+  <rect width="64" height="64" rx="32" fill="#c8f150"/>
+  <path d="M41.2 19.4c-3.2-2.7-12.4-2.1-14.8 2.8-2.8 5.9 10.7 6 8.6 11.3-1.8 4.4-10.2 2.8-13.2.1" fill="none" stroke="#102c2a" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M18 46c8.4-3.5 18.4-3.2 28 0" fill="none" stroke="#102c2a" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+</svg>
