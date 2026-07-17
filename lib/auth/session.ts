@@ -14,6 +14,7 @@ export async function requireAccount(nextPath = "/account") {
   const { data: person, error: personError } = await supabase
     .from("people")
     .select("id, display_name, primary_email, primary_phone, locale, timezone, account_status")
+    .eq("auth_user_id", userData.user.id)
     .single();
 
   if (personError || !person) redirect("/sign-in?notice=Your+account+is+not+available.");
