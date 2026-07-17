@@ -76,7 +76,7 @@ button, input, select, textarea { font: inherit; }
 .property-search-full .search-input-row { background: #fff; border: 1px solid #cfc5b4; min-height: 46px; padding: 0 13px; }
 .property-search.property-search-full .search-input-row select { border: 0; min-height: 44px; padding: 0; }
 .property-search-full button { align-items: center; border: 1px solid var(--teal-strong); display: flex; gap: 8px; grid-column: 1 / -1; justify-content: center; margin-top: 10px; min-height: 54px; padding: 0 20px; }
-.property-search-full button span { font-size: 12px; font-weight: 700; }
+.property-search-full button span { font-size: 15px; font-weight: 700; }
 .property-search label { border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 7px; justify-content: center; padding: 10px 18px; }
 .property-search label > span:first-child { color: #72817e; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .search-input-row { align-items: center; display: flex; gap: 9px; }
