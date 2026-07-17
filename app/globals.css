@@ -30,6 +30,8 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; }
+/* Platform button typography standard: all interactive action labels use 15px. */
+button, a.outline-button, a.solid-button, a.danger-button, a.outline-dark-button, a.site-join-button { font-size: 15px !important; }
 
 .site-header {
   align-items: center;
