@@ -1,6 +1,6 @@
 begin;
 
-select plan(6);
+select plan(8);
 
 select has_schema(
   'app_private',
@@ -48,6 +48,34 @@ select is(
   ),
   0::bigint,
   'no application security-definer function is executable by PUBLIC'
+);
+
+select is(
+  (
+    select count(*)::bigint
+    from pg_proc as function
+    join pg_namespace as namespace
+      on namespace.oid = function.pronamespace
+    where namespace.nspname = 'public'
+      and function.prosecdef
+      and has_function_privilege('anon', function.oid, 'execute')
+  ),
+  0::bigint,
+  'anonymous users cannot execute public security-definer functions'
+);
+
+select is(
+  (
+    select count(*)::bigint
+    from pg_proc as function
+    join pg_namespace as namespace
+      on namespace.oid = function.pronamespace
+    where namespace.nspname = 'public'
+      and function.prosecdef
+      and has_function_privilege('authenticated', function.oid, 'execute')
+  ),
+  0::bigint,
+  'signed-in users cannot execute public security-definer functions'
 );
 
 select * from finish();
