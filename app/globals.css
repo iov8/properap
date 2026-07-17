@@ -314,6 +314,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .brokerage-site-hero .site-logo { flex: 0 1 auto; margin: 0; }
 .professional-site-hero > span, .professional-site-intro span { color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .professional-site-hero h1 { color: var(--ivory); font-family: Georgia,serif; font-size: clamp(52px,8vw,104px); font-weight: 400; letter-spacing: -.055em; margin: 22px 0 18px; max-width: 980px; }
+.brokerage-site-hero .brokerage-site-title { font-size: clamp(30px, 5.5vw, 82px); max-width: none; overflow: hidden; text-overflow: clip; white-space: nowrap; width: 100%; }
 .professional-site-hero p { color: rgba(255,255,255,.66); font-family: Georgia,serif; font-size: clamp(17px,2vw,25px); line-height: 1.5; max-width: 720px; }
 .professional-site-intro { display: grid; gap: 60px; grid-template-columns: 1fr 1fr; margin: 0 auto; max-width: 1200px; padding: 80px 28px; }
 .professional-site-intro h2 { font-family: Georgia,serif; font-size: 40px; font-weight: 400; line-height: 1.15; margin: 14px 0 0; }
@@ -694,6 +695,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 @media (max-width: 900px) {
   .brokerage-site-hero .professional-site-hero-content { align-items: flex-start; flex-direction: column; }
   .brokerage-site-hero .site-logo { height: clamp(200px, 42vw, 300px); width: min(82vw, 560px); }
+  .brokerage-site-hero .brokerage-site-title { font-size: clamp(24px, 8vw, 60px); }
   .desktop-nav, .launch-note { display: none; }
   .hero { grid-template-columns: 1fr; }
   .hero-copy { padding-bottom: 72px; }
