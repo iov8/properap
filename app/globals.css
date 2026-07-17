@@ -165,6 +165,12 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .area-map-panel > span { color: #53635f; font-size: 8px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .area-map-panel h2 { font-family: Georgia, serif; font-size: 32px; font-weight: 400; margin: 13px 0; }
 .area-map-panel > p { color: #596b66; font-size: 11px; line-height: 1.6; }
+.public-property-map { background: var(--sage); border: 1px solid rgba(22,140,145,.18); margin-top: 24px; padding: 24px; }
+.public-property-map > div > span { color: #53635f; font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.public-property-map h2 { font-family: Georgia, serif; font-size: clamp(25px, 3vw, 34px); font-weight: 400; margin: 8px 0; }
+.public-property-map p { color: #596b66; font-size: 12px; line-height: 1.6; margin: 0 0 18px; }
+.public-property-map iframe { border: 1px solid rgba(16,44,42,.16); display: block; height: 360px; width: 100%; }
+.public-property-map > a { color: var(--evergreen); display: inline-block; font-size: 12px; font-weight: 700; margin-top: 12px; text-decoration: underline; text-underline-offset: 3px; }
 .area-clusters { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 30px; }
 .area-clusters a { align-items: center; background: var(--paper); border: 1px solid rgba(28,48,43,.18); display: flex; gap: 11px; padding: 10px 12px; }
 .area-clusters span { font-size: 10px; }

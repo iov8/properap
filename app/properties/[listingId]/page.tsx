@@ -42,6 +42,16 @@ export default async function PublicListingPage({ params, searchParams }: RouteP
   const query = await searchParams;
   const price = new Intl.NumberFormat("en-JM", { style: "currency", currency: listing.currency, maximumFractionDigits: 0 }).format(listing.price);
   const location = listing.public_location_label ?? listing.administrative_area_name;
+  const hasPublicMapPoint = listing.public_latitude !== null && listing.public_longitude !== null;
+  const latitude = Number(listing.public_latitude);
+  const longitude = Number(listing.public_longitude);
+  const mapDelta = listing.public_location_precision === "exact" ? 0.012 : 0.035;
+  const mapEmbedUrl = hasPublicMapPoint
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(`${longitude - mapDelta},${latitude - mapDelta},${longitude + mapDelta},${latitude + mapDelta}`)}&layer=mapnik&marker=${encodeURIComponent(`${latitude},${longitude}`)}`
+    : null;
+  const fullMapUrl = hasPublicMapPoint
+    ? `https://www.openstreetmap.org/?mlat=${encodeURIComponent(latitude)}&mlon=${encodeURIComponent(longitude)}#map=14/${encodeURIComponent(latitude)}/${encodeURIComponent(longitude)}`
+    : null;
   const supabase = await createClient();
   const { data: gallery } = await supabase.from("public_listing_media")
     .select("id,variant,position,width,height")
@@ -71,6 +81,7 @@ export default async function PublicListingPage({ params, searchParams }: RouteP
       url: `${STEADFAST_SITE_URL}/properties/${listing.listing_id}`,
       offers: { "@type": "Offer", price: listing.price, priceCurrency: listing.currency, availability: "https://schema.org/InStock" },
       areaServed: { "@type": "AdministrativeArea", name: listing.administrative_area_name },
+      ...(hasPublicMapPoint ? { geo: { "@type": "GeoCoordinates", latitude, longitude } } : {}),
       seller: { "@type": "RealEstateAgent", name: listing.brokerage_name },
     }} />
     <header className="site-header search-header"><BrandLogo /><Link className="outline-button" href="/properties">Back to search</Link></header>
@@ -84,6 +95,11 @@ export default async function PublicListingPage({ params, searchParams }: RouteP
         {gallery?.length ? <section className="public-media-gallery" aria-label="Property photographs">{gallery.map((photo, index) => <Image key={photo.id} src={`/media/listings/${photo.id}/gallery.webp`} alt={`${listing.title} photograph ${index + 1}`} width={photo.width} height={photo.height} sizes={index === 0 ? "(max-width: 900px) 100vw, 65vw" : "(max-width: 700px) 100vw, 32vw"} priority={index === 0} unoptimized />)}</section> : <section className="public-media-hold"><span>{listing.property_subtype ?? listing.property_type}</span><strong>Photographs are being prepared</strong><p>The listing remains protected until its privacy-safe public images are available.</p></section>}
         <section className="public-listing-facts"><div><span>Bedrooms</span><strong>{listing.bedrooms ?? "—"}</strong></div><div><span>Bathrooms</span><strong>{listing.bathrooms ?? "—"}</strong></div><div><span>Building</span><strong>{listing.building_area ? `${listing.building_area} ${listing.area_unit?.replace("_", " ") ?? ""}` : "—"}</strong></div><div><span>Land</span><strong>{listing.land_area ? `${listing.land_area} ${listing.area_unit?.replace("_", " ") ?? ""}` : "—"}</strong></div></section>
         <section className="public-description"><span>About this property</span><h2>Property details</h2><p>{listing.description}</p></section>
+        {mapEmbedUrl && fullMapUrl ? <section className="public-property-map" aria-labelledby="property-map-title">
+          <div><span>Location</span><h2 id="property-map-title">Explore {location}</h2><p>{listing.public_location_precision === "exact" ? "The approved listing location is marked on the map." : "The marker shows the approved general area to protect property privacy."}</p></div>
+          <iframe title={`Map showing ${location}`} src={mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer" />
+          <a href={fullMapUrl} target="_blank" rel="noreferrer noopener">Open larger map</a>
+        </section> : null}
       </div>
       <aside className="public-agent-card" id="contact-agent">
         <span>Contact the listing representative</span>
