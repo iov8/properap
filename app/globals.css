@@ -316,9 +316,10 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .professional-site-hero h1 { color: var(--ivory); font-family: Georgia,serif; font-size: clamp(52px,8vw,104px); font-weight: 400; letter-spacing: -.055em; margin: 22px 0 18px; max-width: 980px; }
 .brokerage-site-hero .brokerage-site-title { font-size: clamp(30px, 5.5vw, 82px); max-width: none; overflow: hidden; text-overflow: clip; white-space: nowrap; width: 100%; }
 .professional-site-hero p { color: rgba(255,255,255,.66); font-family: Georgia,serif; font-size: clamp(17px,2vw,25px); line-height: 1.5; max-width: 720px; }
-.professional-site-intro { display: grid; gap: 60px; grid-template-columns: 1fr 1fr; margin: 0 auto; max-width: 1200px; padding: 80px 28px; }
-.professional-site-intro h2 { font-family: Georgia,serif; font-size: 40px; font-weight: 400; line-height: 1.15; margin: 14px 0 0; }
-.professional-site-intro > p { color: #5f706c; font-size: 13px; line-height: 1.8; }
+.professional-site-intro { align-items: start; display: grid; gap: clamp(28px, 4vw, 54px); grid-template-columns: minmax(260px, .8fr) minmax(0, 1.2fr); margin: 0 auto; max-width: 1200px; padding: clamp(38px, 5vw, 58px) 28px; }
+.professional-site-intro h2 { font-family: Georgia,serif; font-size: clamp(30px, 3.1vw, 42px); font-weight: 400; line-height: 1.12; margin: 10px 0 0; max-width: 520px; }
+.professional-site-intro > p { color: #5f706c; font-size: 13px; line-height: 1.7; margin: 0; max-width: 680px; }
+.professional-site-intro .site-strengths { margin-top: 16px; max-width: 680px; }
 .professional-site-listings { background: var(--cream); padding: 80px max(28px,calc((100vw - 1200px)/2)); }
 .property-card-placeholder { align-items: center; aspect-ratio: 4/3; background: var(--sage); color: #59706a; display: flex; font-size: 10px; justify-content: center; text-transform: uppercase; }
 .solid-button { background: var(--ink); border: 1px solid var(--ink); color: #fff; }
