@@ -28,10 +28,10 @@ insert into public.membership_roles (membership_id,brokerage_id,role_key) values
 ('73000000-0000-4000-8000-000000000002','63000000-0000-4000-8000-000000000001','agent'),
 ('73000000-0000-4000-8000-000000000003','63000000-0000-4000-8000-000000000001','agent');
 
-insert into public.property_addresses (id,country_id,administrative_area_id,address_line_1,normalized_address)
-values ('83000000-0000-4000-8000-000000000001',(select id from public.countries where code='JM'),(select id from public.administrative_areas where code='JM-02'),'10 Test Avenue','10 test avenue saint andrew jamaica');
-insert into public.properties (id,created_by_brokerage_id,property_type,address_id,address_fingerprint)
-values ('84000000-0000-4000-8000-000000000001','63000000-0000-4000-8000-000000000001','residential','83000000-0000-4000-8000-000000000001',repeat('a',64));
+insert into public.property_addresses (id,country_id,administrative_area_id,address_line_1,normalized_address,created_by_brokerage_id,created_by_person_id)
+values ('83000000-0000-4000-8000-000000000001',(select id from public.countries where code='JM'),(select id from public.administrative_areas where code='JM-02'),'10 Test Avenue','10 test avenue saint andrew jamaica','63000000-0000-4000-8000-000000000001',(select id from public.people where auth_user_id='53000000-0000-4000-8000-000000000002'));
+insert into public.properties (id,created_by_brokerage_id,created_by_person_id,property_type,address_id,address_fingerprint)
+values ('84000000-0000-4000-8000-000000000001','63000000-0000-4000-8000-000000000001',(select id from public.people where auth_user_id='53000000-0000-4000-8000-000000000002'),'residential','83000000-0000-4000-8000-000000000001',repeat('a',64));
 insert into public.listings (id,brokerage_id,property_id,created_by_person_id)
 values ('85000000-0000-4000-8000-000000000001','63000000-0000-4000-8000-000000000001','84000000-0000-4000-8000-000000000001',(select id from public.people where auth_user_id='53000000-0000-4000-8000-000000000002')),
 ('85000000-0000-4000-8000-000000000002','63000000-0000-4000-8000-000000000001','84000000-0000-4000-8000-000000000001',(select id from public.people where auth_user_id='53000000-0000-4000-8000-000000000002'));
@@ -54,7 +54,7 @@ select throws_like($$delete from public.listing_versions where id='87000000-0000
 
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"53000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
-select throws_like($$select * from public.listings$$,'%permission denied%','listing tables fail closed before role policies are introduced');
+select results_eq($$select count(*)::bigint from public.listings where id='85000000-0000-4000-8000-000000000001'$$,$$values (1::bigint)$$,'the assigned agent can read their private listing after role policies are introduced');
 reset role;
 
 set local role authenticated;
