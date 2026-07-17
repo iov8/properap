@@ -70,3 +70,22 @@ export const invitationSchema = z.object({
 export const invitationAcceptanceSchema = z.object({
   token: z.string().min(32).max(256).regex(/^[A-Za-z0-9_-]+$/),
 });
+
+export const staffCapabilitySchema = z.object({
+  membershipId: z.string().uuid(),
+  permissionKey: z.enum([
+    "listing.review",
+    "listing.manage",
+    "listing.reassign",
+    "agent.manage",
+    "staff.manage_limited",
+    "brokerage.profile",
+    "inquiry.manage",
+    "report.view",
+    "audit.view",
+    "billing.view",
+    "integration.manage",
+  ]),
+  operation: z.enum(["grant", "revoke"]),
+  reason: z.string().trim().max(1000),
+});

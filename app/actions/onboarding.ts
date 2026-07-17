@@ -11,6 +11,7 @@ import {
   invitationAcceptanceSchema,
   invitationSchema,
   profileSchema,
+  staffCapabilitySchema,
 } from "@/lib/auth/validation";
 
 function readText(formData: FormData, key: string) {
@@ -138,4 +139,38 @@ export async function acceptBrokerageInvitationAction(formData: FormData) {
 
   if (error) redirect("/account?error=This+invitation+could+not+be+accepted.");
   redirect("/account?notice=Welcome+to+your+brokerage.");
+}
+
+export async function updateStaffCapabilityAction(formData: FormData) {
+  const context = await getActiveMembershipContext();
+  if (!context.membership || !context.roles.includes("broker")) {
+    redirect("/account?error=Only+the+principal+broker+can+manage+staff+capabilities.");
+  }
+
+  const parsed = staffCapabilitySchema.safeParse({
+    membershipId: readText(formData, "membershipId"),
+    permissionKey: readText(formData, "permissionKey"),
+    operation: readText(formData, "operation"),
+    reason: readText(formData, "reason"),
+  });
+
+  if (!parsed.success) {
+    redirect("/broker/agents?error=Check+the+staff+capability+change.");
+  }
+
+  const { error } = await context.supabase
+    .from("membership_permission_commands")
+    .insert({
+      membership_id: parsed.data.membershipId,
+      permission_key: parsed.data.permissionKey,
+      operation: parsed.data.operation,
+      reason: parsed.data.reason || null,
+    });
+
+  if (error) {
+    redirect("/broker/agents?error=The+staff+capability+could+not+be+updated.");
+  }
+
+  revalidatePath("/broker/agents");
+  redirect("/broker/agents?notice=Staff+access+updated.");
 }

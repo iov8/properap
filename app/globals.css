@@ -189,6 +189,15 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .decision-form { align-items: end; display: grid; gap: 10px; grid-column: 1 / -1; grid-template-columns: minmax(200px, 1fr) auto auto; }
 .decision-form label { display: flex; flex-direction: column; gap: 7px; }
 .decision-form .solid-button, .outline-dark-button { border-radius: 999px; min-height: 42px; padding: 0 18px; }
+.capability-panel { border: 1px solid var(--line); grid-column: 1 / -1; padding: 16px; }
+.capability-panel summary { cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .06em; }
+.capability-panel > p { color: #657572; font-size: 12px; line-height: 1.55; margin: 12px 0; }
+.capability-list { border-top: 1px solid var(--line); }
+.capability-row { align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) auto; padding: 14px 0; }
+.capability-row span strong { display: block; font-size: 12px; }
+.capability-row span small { color: #73817e; display: block; font-size: 10px; line-height: 1.45; margin-top: 4px; }
+.capability-toggle { background: #edf0ee; border: 1px solid #d1d8d4; border-radius: 999px; color: #56635f; cursor: pointer; font-size: 10px; font-weight: 700; min-width: 94px; padding: 9px 12px; }
+.capability-toggle.enabled { background: var(--lime); border-color: #a8ca40; color: var(--ink); }
 .outline-dark-button { background: transparent; border: 1px solid var(--ink); color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 700; }
 .mini-list { display: flex; flex-direction: column; margin-top: 18px; }
 .mini-list > div { border-top: 1px solid var(--line); padding: 15px 0; }
@@ -215,6 +224,8 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
   .record-list article { align-items: start; grid-template-columns: 1fr; }
   .record-status { justify-self: start; }
   .decision-form { grid-template-columns: 1fr; }
+  .capability-row { align-items: start; grid-template-columns: 1fr; }
+  .capability-toggle { justify-self: start; }
 }
 
 @media (max-width: 900px) {

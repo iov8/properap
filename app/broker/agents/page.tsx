@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { decideAgentApplicationAction } from "@/app/actions/onboarding";
 import { AccountHeader } from "@/app/components/account-header";
 import { InvitationForm } from "@/app/components/invitation-form";
+import { StaffCapabilityPanel } from "@/app/components/staff-capability-panel";
 import { StatusMessage } from "@/app/components/status-message";
 import { getActiveMembershipContext } from "@/lib/auth/session";
 
@@ -21,7 +22,7 @@ export default async function BrokerAgentsPage({ searchParams }: { searchParams:
 
   const [{ data: applications }, { data: members }, { data: invitations }] = await Promise.all([
     context.supabase.from("agent_applications").select("id, status, submitted_at, broker_reason, people(display_name, primary_email)").eq("brokerage_id", context.membership.brokerage_id).order("submitted_at"),
-    context.supabase.from("brokerage_memberships").select("id, status, starts_at, people(display_name, primary_email), membership_roles(role_key, ends_at)").eq("brokerage_id", context.membership.brokerage_id).eq("status", "active").order("starts_at"),
+    context.supabase.from("brokerage_memberships").select("id, status, starts_at, people(display_name, primary_email), membership_roles(role_key, ends_at), membership_permissions(permission_key, effect, ends_at)").eq("brokerage_id", context.membership.brokerage_id).eq("status", "active").order("starts_at"),
     canInvite ? context.supabase.from("brokerage_invitations").select("id, email, status, expires_at, created_at, brokerage_invitation_roles(role_key)").eq("brokerage_id", context.membership.brokerage_id).order("created_at", { ascending: false }).limit(10) : Promise.resolve({ data: [] }),
   ]);
 
@@ -40,7 +41,30 @@ export default async function BrokerAgentsPage({ searchParams }: { searchParams:
               return <article key={application.id}><div><strong>{person?.display_name ?? "Applicant"}</strong><span>{person?.primary_email ?? "Email unavailable"}</span></div><span className={`record-status status-${application.status}`}>{application.status.replaceAll("_", " ")}</span>{application.status === "submitted" ? <form action={decideAgentApplicationAction} className="decision-form"><input type="hidden" name="applicationId" value={application.id} /><label><span>Decision note</span><input name="reason" maxLength={2000} placeholder="Required when declining" /></label><button name="decision" value="approve" className="solid-button" type="submit">Approve</button><button name="decision" value="deny" className="outline-dark-button" type="submit">Decline</button></form> : null}</article>;
             }) : <p className="muted-copy">No applications are waiting for review.</p>}</div>
           </section>
-          <section className="account-card"><div className="card-heading"><span>Current team</span><h2>Active members</h2></div><div className="record-list">{members?.map((member) => { const person = member.people as unknown as { display_name?: string; primary_email?: string } | null; const roles = member.membership_roles as unknown as { role_key: string; ends_at: string | null }[]; return <article key={member.id}><div><strong>{person?.display_name ?? "Member"}</strong><span>{person?.primary_email ?? ""}</span></div><span className="record-status">{roles.filter((role) => !role.ends_at).map((role) => role.role_key.replaceAll("_", " ")).join(", ")}</span></article>; })}</div></section>
+          <section className="account-card">
+            <div className="card-heading"><span>Current team</span><h2>Active members</h2></div>
+            <div className="record-list">{members?.map((member) => {
+              const person = member.people as unknown as { display_name?: string; primary_email?: string } | null;
+              const roles = member.membership_roles as unknown as { role_key: string; ends_at: string | null }[];
+              const permissions = member.membership_permissions as unknown as { permission_key: string; effect: string; ends_at: string | null }[];
+              const activeRoles = roles.filter((role) => !role.ends_at).map((role) => role.role_key);
+              const isStaff = activeRoles.includes("broker_staff");
+              const isPrincipalBroker = activeRoles.includes("broker");
+              const activePermissionKeys = permissions
+                .filter((permission) => !permission.ends_at && permission.effect === "allow")
+                .map((permission) => permission.permission_key);
+
+              return (
+                <article key={member.id}>
+                  <div><strong>{person?.display_name ?? "Member"}</strong><span>{person?.primary_email ?? ""}</span></div>
+                  <span className="record-status">{activeRoles.map((role) => role.replaceAll("_", " ")).join(", ")}</span>
+                  {isBroker && isStaff && !isPrincipalBroker ? (
+                    <StaffCapabilityPanel membershipId={member.id} activePermissionKeys={activePermissionKeys} />
+                  ) : null}
+                </article>
+              );
+            })}</div>
+          </section>
         </div>
         <aside className="management-aside">
           {canInvite ? <section className="account-card"><div className="card-heading"><span>Invite</span><h2>Add a person</h2></div><InvitationForm brokerageId={context.membership.brokerage_id} /></section> : null}
