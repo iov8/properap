@@ -17,6 +17,12 @@ const contentSchema = z.object({
   contactPhone: z.string().trim().max(40).optional(),
   strengths: z.string().trim().max(800).optional(),
 });
+const testimonialSchema = z.object({
+  siteId: z.string().uuid(),
+  authorName: z.string().trim().min(1).max(120),
+  authorContext: z.string().trim().max(180).optional(),
+  quote: z.string().trim().min(10).max(1200),
+});
 
 function text(formData: FormData, key: string) { const value = formData.get(key); return typeof value === "string" ? value : ""; }
 
@@ -92,4 +98,52 @@ export async function uploadSiteAssetAction(formData: FormData) {
   }
   revalidatePath(`/agents/${site.slug}`); revalidatePath(`/brokerages/${site.slug}`); revalidatePath("/workspace/site");
   redirect("/workspace/site?notice=Your+website+image+was+prepared+and+saved.");
+}
+
+export async function createSiteTestimonialAction(formData: FormData) {
+  const parsed = testimonialSchema.safeParse({ siteId: text(formData, "siteId"), authorName: text(formData, "authorName"), authorContext: text(formData, "authorContext"), quote: text(formData, "quote") });
+  const file = formData.get("testimonialAsset");
+  const hasFile = file instanceof File && file.size > 0;
+  if (!parsed.success || (hasFile && (!(file instanceof File) || file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp"].includes(file.type)))) redirect("/workspace/site?error=Check+the+testimonial+details+and+optional+image.");
+  const { admin, site } = await requireOwnedSite(parsed.data.siteId);
+  const { data: existing, error: existingError } = await admin.from("site_testimonials").select("position").eq("site_id", site.id).eq("is_active", true);
+  if (existingError) redirect("/workspace/site?error=The+testimonial+could+not+be+saved.");
+  const usedPositions = new Set((existing ?? []).map((item) => item.position));
+  const position = Array.from({ length: 10 }, (_, index) => index + 1).find((value) => !usedPositions.has(value));
+  if (!position) redirect("/workspace/site?error=You+can+display+up+to+ten+testimonials.");
+  let assetId: string | null = null;
+  let objectPath: string | null = null;
+  try {
+    if (hasFile && file instanceof File) {
+      const image = sharp(Buffer.from(await file.arrayBuffer()), { animated: false }).rotate();
+      const metadata = await image.metadata();
+      if (!metadata.width || !metadata.height || metadata.width < 128 || metadata.height < 128 || metadata.width * metadata.height > 40_000_000) throw new Error("invalid dimensions");
+      const bytes = await image.resize({ width: 800, height: 800, fit: "cover", position: "attention", withoutEnlargement: true }).webp({ quality: 84 }).toBuffer();
+      const output = await sharp(bytes).metadata();
+      assetId = randomUUID(); objectPath = `${site.id}/testimonial-photo/${assetId}.webp`;
+      const { error: uploadError } = await admin.storage.from("professional-site-assets").upload(objectPath, new Blob([bytes], { type: "image/webp" }), { contentType: "image/webp", cacheControl: "0", upsert: false });
+      if (uploadError) throw uploadError;
+      const { error: assetError } = await admin.from("site_assets").insert({ id: assetId, site_id: site.id, placement: "testimonial_photo", object_path: objectPath, original_filename: file.name.slice(0, 180), byte_size: bytes.length, width: output.width, height: output.height });
+      if (assetError) throw assetError;
+    }
+    const { error: testimonialError } = await admin.from("site_testimonials").insert({ site_id: site.id, author_name: parsed.data.authorName, author_context: parsed.data.authorContext || null, quote: parsed.data.quote, asset_id: assetId, position, is_active: true });
+    if (testimonialError) throw testimonialError;
+  } catch {
+    if (assetId) await admin.from("site_assets").delete().eq("id", assetId);
+    if (objectPath) await admin.storage.from("professional-site-assets").remove([objectPath]);
+    redirect("/workspace/site?error=The+testimonial+or+image+could+not+be+saved.");
+  }
+  revalidatePath(`/agents/${site.slug}`); revalidatePath(`/brokerages/${site.slug}`); revalidatePath(`/sites/${site.slug}`); revalidatePath("/workspace/site");
+  redirect("/workspace/site?notice=Testimonial+added+to+your+website.");
+}
+
+export async function removeSiteTestimonialAction(formData: FormData) {
+  const siteId = z.string().uuid().safeParse(text(formData, "siteId"));
+  const testimonialId = z.string().uuid().safeParse(text(formData, "testimonialId"));
+  if (!siteId.success || !testimonialId.success) redirect("/workspace/site?error=The+testimonial+could+not+be+removed.");
+  const { admin, site } = await requireOwnedSite(siteId.data);
+  const { error } = await admin.from("site_testimonials").update({ is_active: false }).eq("id", testimonialId.data).eq("site_id", site.id);
+  if (error) redirect("/workspace/site?error=The+testimonial+could+not+be+removed.");
+  revalidatePath(`/agents/${site.slug}`); revalidatePath(`/brokerages/${site.slug}`); revalidatePath(`/sites/${site.slug}`); revalidatePath("/workspace/site");
+  redirect("/workspace/site?notice=Testimonial+removed+from+your+website.");
 }

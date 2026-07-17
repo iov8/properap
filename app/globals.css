@@ -211,6 +211,15 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .public-property-map iframe { border: 1px solid rgba(16,44,42,.16); display: block; height: 360px; width: 100%; }
 .public-property-map > a { color: var(--evergreen); display: inline-block; font-size: 12px; font-weight: 700; margin-top: 12px; text-decoration: underline; text-underline-offset: 3px; }
 .site-builder-card { margin-bottom: 24px; }
+.testimonial-builder { border-top: 1px solid var(--sand); margin-top: 32px; padding-top: 28px; }
+.testimonial-builder > p { color: #657572; font-size: 13px; line-height: 1.6; margin: 12px 0 0; }
+.stack-form.testimonial-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.testimonial-records { border-top: 1px solid var(--sand); display: grid; gap: 0; margin-top: 28px; }
+.testimonial-records article { align-items: start; border-bottom: 1px solid var(--sand); display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) auto; padding: 18px 0; }
+.testimonial-records strong, .testimonial-records span { display: block; }
+.testimonial-records strong { font-size: 15px; }
+.testimonial-records span { color: #71807c; font-size: 12px; margin-top: 3px; }
+.testimonial-records p { color: #52635f; font-family: Georgia, serif; font-size: 15px; line-height: 1.55; margin: 10px 0 0; }
 .site-section-order { border: 1px solid var(--sand); display: grid; gap: 8px; padding: 12px; }
 .site-section-order > span { color: #53635f; font-size: 11px; }
 .site-section-order > div { align-items: center; background: var(--ivory); border: 1px solid rgba(16,44,42,.1); cursor: grab; display: flex; justify-content: space-between; padding: 10px 12px; }
@@ -678,6 +687,8 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
   .auth-intro h1 { font-size: 58px; }
   .stack-form.two-column { grid-template-columns: 1fr; }
   .stack-form.two-column > * { grid-column: 1; }
+  .stack-form.testimonial-form { grid-template-columns: 1fr; }
+  .testimonial-records article { grid-template-columns: 1fr; }
   .stack-form.site-asset-upload { grid-template-columns: 1fr; }
   .account-header nav, .account-session-actions > span { display: none; }
   .account-session-actions { margin-left: auto; }

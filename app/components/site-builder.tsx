@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { saveSiteBuilderAction, uploadSiteAssetAction } from "@/app/actions/site-builder";
+import { createSiteTestimonialAction, removeSiteTestimonialAction, saveSiteBuilderAction, uploadSiteAssetAction } from "@/app/actions/site-builder";
 import { compressListingImage } from "@/lib/media/client-image-compression";
 
 const labels: Record<string, string> = { hero: "Hero", about: "About", search: "Property search", listings: "Listings", testimonials: "Testimonials", contact: "Contact" };
 const allSections = ["hero", "about", "search", "listings", "testimonials", "contact"];
 type Site = { id: string; site_type: string; display_name: string; slug: string; theme: Record<string, unknown> | null; layout: Record<string, unknown> | null; content: Record<string, unknown> | null };
 type SiteTheme = { primary: string; accent: string; background: string; text: string };
+type Testimonial = { id: string; author_name: string; author_context: string | null; quote: string; asset_id: string | null; position: number };
 const themeFields: { key: keyof SiteTheme; label: string; help: string }[] = [
   { key: "primary", label: "Hero background", help: "The large banner at the top of your public website." },
   { key: "accent", label: "Accent color", help: "Buttons, highlights, and small premium details." },
@@ -23,7 +24,7 @@ function ImageUploadButton() {
   </button>;
 }
 
-export function SiteBuilder({ site }: { site: Site }) {
+export function SiteBuilder({ site, testimonials }: { site: Site; testimonials: Testimonial[] }) {
   const savedOrder = Array.isArray(site.layout?.sectionOrder) ? site.layout.sectionOrder.filter((value): value is string => allSections.includes(String(value))) : allSections;
   const [order, setOrder] = useState(savedOrder.length === allSections.length ? savedOrder : allSections);
   const [aboutHtml, setAboutHtml] = useState(String(site.content?.aboutHtml ?? ""));
@@ -32,6 +33,7 @@ export function SiteBuilder({ site }: { site: Site }) {
   const [strengths, setStrengths] = useState(String(site.content?.strengths ?? ""));
   const [imageError, setImageError] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [testimonialFileName, setTestimonialFileName] = useState("");
   const editor = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
   useEffect(() => { if (editor.current && !initialized.current) { editor.current.innerHTML = aboutHtml; initialized.current = true; } }, [aboutHtml]);
@@ -49,8 +51,9 @@ export function SiteBuilder({ site }: { site: Site }) {
     setAboutHtml(editor.current?.innerHTML ?? "");
   };
   const compress = async (event: React.ChangeEvent<HTMLInputElement>) => { const selected = event.target.files?.[0]; if (!selected) return; try { const compressed = await compressListingImage(selected); const transfer = new DataTransfer(); transfer.items.add(compressed); event.target.files = transfer.files; setSelectedFileName(selected.name); setImageError(""); } catch { event.target.value = ""; setSelectedFileName(""); setImageError("Choose a clear still image at least 300 pixels wide and high."); } };
+  const compressTestimonial = async (event: React.ChangeEvent<HTMLInputElement>) => { const selected = event.target.files?.[0]; if (!selected) return; try { const compressed = await compressListingImage(selected); const transfer = new DataTransfer(); transfer.items.add(compressed); event.target.files = transfer.files; setTestimonialFileName(selected.name); setImageError(""); } catch { event.target.value = ""; setTestimonialFileName(""); setImageError("Choose a clear still image at least 300 pixels wide and high."); } };
   return <section className="account-card site-builder-card">
-    <div className="card-heading"><span>Modular website</span><h2>{site.display_name}</h2></div>
+    <div className="card-heading"><span>{site.site_type === "brokerage" ? "Brokerage website" : "Agent website"}</span><h2>{site.display_name}</h2></div>
     <p>Arrange sections, write your story, and choose a color system. Changes are saved only when you confirm below.</p>
     <form action={saveSiteBuilderAction} className="stack-form" data-prompt-title="Publish these website changes?" data-prompt-message="Your professional website layout, palette, and public content will update for visitors." data-prompt-confirm="Save website">
       <input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="sectionOrder" value={JSON.stringify(order)} /><input type="hidden" name="content" value={JSON.stringify({ aboutHtml, contactEmail, contactPhone, strengths })} />
@@ -61,6 +64,19 @@ export function SiteBuilder({ site }: { site: Site }) {
       <label><span>Public phone</span><input maxLength={40} value={contactPhone} onChange={(event) => setContactPhone(event.currentTarget.value)} /></label><label><span>Career strengths</span><input maxLength={800} value={strengths} onChange={(event) => setStrengths(event.currentTarget.value)} /></label>
       <button className="solid-button" type="submit">Save website</button>
     </form>
+    <section className="testimonial-builder">
+      <div className="card-heading"><span>Client stories</span><h2>Testimonials</h2></div>
+      <p>Add up to ten client testimonials. Each one rotates on the public {site.site_type === "brokerage" ? "brokerage" : "agent"} website.</p>
+      <form action={createSiteTestimonialAction} className="stack-form testimonial-form" data-prompt-title="Add this testimonial?" data-prompt-message="This client story will appear publicly on your professional website after it is saved." data-prompt-confirm="Add testimonial">
+        <input type="hidden" name="siteId" value={site.id} />
+        <label><span>Client name</span><input name="authorName" required maxLength={120} /></label>
+        <label><span>Client context</span><input name="authorContext" maxLength={180} placeholder="For example: Home buyer in Kingston" /></label>
+        <label className="full"><span>Testimonial</span><textarea name="quote" required minLength={10} maxLength={1200} rows={4} placeholder="Write the client’s testimonial exactly as approved for public display." /></label>
+        <label className="site-file-picker full"><span>Optional client photo</span><input className="site-file-input" name="testimonialAsset" type="file" accept="image/jpeg,image/png,image/webp" onChange={compressTestimonial} /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{testimonialFileName || "No file chosen"}</span></span></label>
+        <button className="solid-button full" type="submit">Add testimonial</button>
+      </form>
+      {testimonials.length ? <div className="testimonial-records">{testimonials.map((testimonial) => <article key={testimonial.id}><div><strong>{testimonial.author_name}</strong>{testimonial.author_context ? <span>{testimonial.author_context}</span> : null}<p>“{testimonial.quote}”</p></div><form action={removeSiteTestimonialAction} data-prompt-title="Remove this testimonial?" data-prompt-message="It will no longer appear on the public website." data-prompt-confirm="Remove testimonial" data-prompt-variant="danger"><input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="testimonialId" value={testimonial.id} /><button className="outline-dark-button" type="submit">Remove</button></form></article>)}</div> : null}
+    </section>
     <form action={uploadSiteAssetAction} className="stack-form site-asset-upload" data-prompt-title="Save this website image?" data-prompt-message="It will be compressed to WebP, stripped of metadata, stored privately, and displayed only through SteadFast." data-prompt-confirm="Save image">
       <input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="placement" value={site.site_type === "brokerage" ? "brokerage_logo" : "profile_photo"} />
       <label className="site-file-picker"><span>{site.site_type === "brokerage" ? "Brokerage logo" : "Professional photo"}</span><input className="site-file-input" name="asset" type="file" accept="image/jpeg,image/png,image/webp" onChange={compress} required /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{selectedFileName || "No file chosen"}</span></span></label>{imageError ? <p className="form-error" role="alert">{imageError}</p> : null}<ImageUploadButton />
