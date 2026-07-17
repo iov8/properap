@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { registerAction } from "@/app/actions/auth";
 import { StatusMessage } from "@/app/components/status-message";
+import { BrandLogo } from "@/app/components/brand-logo";
 
 export const metadata: Metadata = { title: "Create account", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export default async function RegisterPage({
   return (
     <main className="auth-page">
       <section className="auth-intro">
-        <Link className="brand" href="/"><span className="brand-mark">S</span><span>SteadFast</span></Link>
+        <BrandLogo />
         <span className="eyebrow"><i /> Start simply</span>
         <h1>Your property<br />account.</h1>
         <p>Every account starts free. Agents join a brokerage only after the brokerage approves their application or invitation.</p>

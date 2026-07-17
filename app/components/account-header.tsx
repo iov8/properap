@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { signOutAction } from "@/app/actions/auth";
+import { BrandLogo } from "@/app/components/brand-logo";
 
 export function AccountHeader({
   displayName,
@@ -16,11 +17,7 @@ export function AccountHeader({
 }) {
   return (
     <header className="account-header">
-      <Link className="brand" href="/" aria-label="SteadFast Realty home">
-        <span className="brand-mark" aria-hidden="true">S</span>
-        <span>SteadFast</span>
-        <small>Realty</small>
-      </Link>
+      <BrandLogo compact />
       <nav aria-label="Account navigation">
         <Link href="/properties">Properties</Link>
         {hasWorkspace ? <Link href="/workspace">Workspace</Link> : null}

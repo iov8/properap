@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { signInAction } from "@/app/actions/auth";
 import { StatusMessage } from "@/app/components/status-message";
+import { BrandLogo } from "@/app/components/brand-logo";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export default async function SignInPage({
   return (
     <main className="auth-page">
       <section className="auth-intro">
-        <Link className="brand" href="/"><span className="brand-mark">S</span><span>SteadFast</span></Link>
+        <BrandLogo />
         <span className="eyebrow"><i /> Professional access</span>
         <h1>Welcome<br />back.</h1>
         <p>Manage your account, applications, listings, and brokerage work from one clear workspace.</p>

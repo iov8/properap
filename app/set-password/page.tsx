@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { setPasswordAction } from "@/app/actions/auth";
 import { StatusMessage } from "@/app/components/status-message";
+import { BrandLogo } from "@/app/components/brand-logo";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Set password", robots: { index: false, follow: false } };
@@ -24,7 +24,7 @@ export default async function SetPasswordPage({
   return (
     <main className="auth-page">
       <section className="auth-intro">
-        <Link className="brand" href="/"><span className="brand-mark">S</span><span>SteadFast</span></Link>
+        <BrandLogo />
         <span className="eyebrow"><i /> Secure account</span>
         <h1>Protect your<br />account.</h1>
         <p>Create the private password you will use to access SteadFast. Recovery links expire and can only be used through your email.</p>

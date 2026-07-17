@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { BrandLogo } from "@/app/components/brand-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function PublicListingPage({ params }: RouteProps) {
   const location = listing.public_location_label ?? listing.administrative_area_name;
 
   return <main className="public-listing-page">
-    <header className="site-header search-header"><Link className="brand" href="/" aria-label="SteadFast Realty home"><span className="brand-mark" aria-hidden="true">S</span><span>SteadFast</span><small>Realty</small></Link><Link className="outline-button" href="/properties">Back to search</Link></header>
+    <header className="site-header search-header"><BrandLogo /><Link className="outline-button" href="/properties">Back to search</Link></header>
     <section className="public-listing-hero">
       <div><span>{listing.purpose === "sale" ? "For sale" : "Long-term rental"} · {listing.lifecycle_state.replaceAll("_", " ")}</span><h1>{listing.title}</h1><p>{location}</p></div>
       <strong>{price}{listing.price_period ? <small> / {listing.price_period}</small> : null}</strong>

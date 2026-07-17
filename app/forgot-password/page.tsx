@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { forgotPasswordAction } from "@/app/actions/auth";
 import { StatusMessage } from "@/app/components/status-message";
+import { BrandLogo } from "@/app/components/brand-logo";
 
 export const metadata: Metadata = { title: "Forgot password", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export default async function ForgotPasswordPage({
   return (
     <main className="auth-page">
       <section className="auth-intro">
-        <Link className="brand" href="/"><span className="brand-mark">S</span><span>SteadFast</span></Link>
+        <BrandLogo />
         <span className="eyebrow"><i /> Account recovery</span>
         <h1>Return to<br />your work.</h1>
         <p>Enter your account email. If it matches a SteadFast account, we will send a private recovery link.</p>

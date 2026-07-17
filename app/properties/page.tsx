@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { BrandLogo } from "@/app/components/brand-logo";
 
 export const metadata: Metadata = {
   title: "Property Search",
@@ -78,7 +79,7 @@ export default async function Properties({ searchParams }: { searchParams: Searc
   return (
     <main className="search-page">
       <header className="site-header search-header">
-        <Link className="brand" href="/" aria-label="SteadFast Realty home"><span className="brand-mark" aria-hidden="true">S</span><span>SteadFast</span><small>Realty</small></Link>
+        <BrandLogo />
         <nav className="desktop-nav" aria-label="Property search navigation"><Link href="/properties">Buy</Link><Link href="/properties?intent=rent">Rent</Link></nav>
         <Link className="outline-button" href="/sign-in">Sign in</Link>
       </header>

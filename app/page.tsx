@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
+import { BrandLogo } from "@/app/components/brand-logo";
 
 const propertyTypes = ["House", "Apartment", "Townhouse", "Land", "Commercial"];
 
@@ -44,11 +45,7 @@ export default async function Home() {
   return (
     <main>
       <header className="site-header">
-        <Link className="brand" href="/" aria-label="SteadFast Realty home">
-          <span className="brand-mark" aria-hidden="true">S</span>
-          <span>SteadFast</span>
-          <small>Realty</small>
-        </Link>
+        <BrandLogo />
         <nav className="desktop-nav" aria-label="Primary navigation">
           <Link href="/properties">Buy</Link>
           <Link href="/properties?intent=rent">Rent</Link>
@@ -142,10 +139,7 @@ export default async function Home() {
       </section>
 
       <footer>
-        <Link className="brand footer-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">S</span>
-          <span>SteadFast</span>
-        </Link>
+        <BrandLogo compact />
         <p>Jamaica&apos;s modern real estate platform.</p>
         <span>Prototype release · 2026</span>
       </footer>
