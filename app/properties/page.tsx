@@ -63,6 +63,13 @@ export default async function Properties({ searchParams }: { searchParams: Searc
   const minPrice = wholeNumber(params.minPrice); const maxPrice = wholeNumber(params.maxPrice);
   const minimumBeds = wholeNumber(params.beds, 20); const minimumSize = wholeNumber(params.minSize, 10_000_000);
   const intent = firstParameter(params.intent) === "rent" ? "rent" : "buy";
+  const cardsPerRow = firstParameter(params.view) === "4" ? 4 : 6;
+  const searchQuery = new URLSearchParams();
+  if (location) searchQuery.set("location", location); if (requestedType) searchQuery.set("type", requestedType); if (category) searchQuery.set("category", category);
+  if (minPrice !== null) searchQuery.set("minPrice", String(minPrice)); if (maxPrice !== null) searchQuery.set("maxPrice", String(maxPrice));
+  if (minimumBeds !== null) searchQuery.set("beds", String(minimumBeds)); if (minimumSize !== null) searchQuery.set("minSize", String(minimumSize));
+  searchQuery.set("intent", intent);
+  function viewHref(view: 4 | 6) { const next = new URLSearchParams(searchQuery); next.set("view", String(view)); return `/properties?${next.toString()}`; }
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
 
@@ -114,6 +121,7 @@ export default async function Properties({ searchParams }: { searchParams: Searc
         <div><span className="eyebrow dark"><i /> Brokerage-approved inventory</span><h1>{location ? `Property in ${location}` : `A place to ${intent}.`}</h1><p>{listings.length} active {listings.length === 1 ? "listing" : "listings"} from eligible Jamaican brokerages.</p></div>
         <form className="marketplace-filters" action="/properties" method="get">
           <input type="hidden" name="intent" value={intent === "rent" ? "rent" : "buy"} />
+          <input type="hidden" name="view" value={cardsPerRow} />
           <label><span>City or area</span><input name="location" defaultValue={location} maxLength={80} placeholder="City, parish, or area" /></label>
           <label><span>Use</span><select name="category" defaultValue={category}><option value="">Any use</option><option value="residential">Residential</option><option value="commercial">Commercial</option></select></label>
           <label><span>Property type</span><select name="type" defaultValue={requestedType}><option value="">Any property</option><option value="house">House</option><option value="apartment">Apartment</option><option value="townhouse">Townhouse</option><option value="land">Land</option><option value="commercial">Commercial</option><option value="development">Development</option></select></label>
@@ -125,10 +133,11 @@ export default async function Properties({ searchParams }: { searchParams: Searc
 
       <div className="marketplace-layout">
         <section className="marketplace-results" aria-label="Property results">
-          {listings.length ? listings.map((listing) => { const cover = coverByListing.get(listing.listing_id); return <article className="property-result-card" key={listing.listing_id}>
-            <Link className="property-card-visual" href={`/properties/${listing.listing_id}`} aria-label={`View ${listing.title}`}>{cover ? <Image src={`/media/listings/${cover.id}/card.webp`} alt="" width={cover.width} height={cover.height} sizes="(max-width: 700px) 100vw, 42vw" unoptimized /> : null}<span>{listing.property_subtype ?? listing.property_type}</span><strong>{listing.administrative_area_name}</strong><small>{listing.ready_media_count} validated {listing.ready_media_count === 1 ? "photo" : "photos"}</small></Link>
+          <div className="property-results-toolbar"><p><strong>{listings.length}</strong> properties</p><div aria-label="Cards per row" className="property-grid-switch"><span>View</span><Link href={viewHref(4)} aria-current={cardsPerRow === 4 ? "page" : undefined}>4</Link><Link href={viewHref(6)} aria-current={cardsPerRow === 6 ? "page" : undefined}>6</Link></div></div>
+          {listings.length ? <div className={`property-card-grid cards-${cardsPerRow}`}>{listings.map((listing) => { const cover = coverByListing.get(listing.listing_id); return <article className="property-result-card" key={listing.listing_id}>
+            <Link className="property-card-visual" href={`/properties/${listing.listing_id}`} aria-label={`View ${listing.title}`}>{cover ? <Image src={`/media/listings/${cover.id}/card.webp`} alt="" width={cover.width} height={cover.height} sizes="(max-width: 680px) 100vw, (max-width: 1050px) 33vw, 17vw" unoptimized /> : null}<span>{listing.property_subtype ?? listing.property_type}</span><strong>{listing.administrative_area_name}</strong><small>{listing.ready_media_count} validated {listing.ready_media_count === 1 ? "photo" : "photos"}</small></Link>
             <div className="property-card-copy"><span>{listing.purpose === "sale" ? "For sale" : "Long-term rental"} · {listing.lifecycle_state.replaceAll("_", " ")}</span><h2><Link href={`/properties/${listing.listing_id}`}>{listing.title}</Link></h2><strong>{formatPrice(listing)}</strong><p>{listing.bedrooms === null ? "" : `${listing.bedrooms} bed · `}{listing.bathrooms === null ? "" : `${listing.bathrooms} bath · `}{listing.public_location_label ?? listing.administrative_area_name}</p><small>Represented by {listing.assigned_agent_name} · {listing.brokerage_name}</small></div>
-          </article>; }) : <div className="listing-empty"><span>No matching inventory</span><h2>Try a broader search.</h2><p>Only active, brokerage-approved listings appear here. Change the location or property type to see other available properties.</p><Link className="solid-button" href={intent === "rent" ? "/properties?intent=rent" : "/properties"}>Clear filters</Link></div>}
+          </article>; })}</div> : <div className="listing-empty"><span>No matching inventory</span><h2>Try a broader search.</h2><p>Only active, brokerage-approved listings appear here. Change the location or property type to see other available properties.</p><Link className="solid-button" href={intent === "rent" ? "/properties?intent=rent" : "/properties"}>Clear filters</Link></div>}
         </section>
 
         <aside className="area-map-panel" aria-label="Listings grouped by area">
