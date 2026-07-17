@@ -36,6 +36,10 @@ type PublicListing = {
   ready_media_count: number;
 };
 
+const JAMAICA_LOCATIONS = ["Kingston", "Montego Bay", "Mandeville", "Ocho Rios", "Negril", "Lucea", "Morant Bay", "Port Antonio", "May Pen", "Spanish Town", "Discovery Bay", "Falmouth", "Black River", "Savanna-la-Mar"];
+const PRICE_OPTIONS = [1_000_000, 5_000_000, 10_000_000, 25_000_000, 50_000_000, 100_000_000, 250_000_000, 500_000_000];
+const SIZE_OPTIONS = [500, 1_000, 1_500, 2_000, 3_000, 5_000, 10_000, 20_000];
+
 function firstParameter(value: string | string[] | undefined) {
   return (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
 }
@@ -61,13 +65,13 @@ export default async function Properties({ searchParams }: { searchParams: Searc
   const requestedType = firstParameter(params.type).toLowerCase().slice(0, 30);
   const category = firstParameter(params.category).toLowerCase();
   const minPrice = wholeNumber(params.minPrice); const maxPrice = wholeNumber(params.maxPrice);
-  const minimumBeds = wholeNumber(params.beds, 20); const minimumSize = wholeNumber(params.minSize, 10_000_000);
+  const minimumBeds = wholeNumber(params.beds, 20); const minimumSize = wholeNumber(params.minSize, 10_000_000); const maximumSize = wholeNumber(params.maxSize, 10_000_000);
   const intent = firstParameter(params.intent) === "rent" ? "rent" : "buy";
   const cardsPerRow = firstParameter(params.view) === "4" ? 4 : 6;
   const searchQuery = new URLSearchParams();
   if (location) searchQuery.set("location", location); if (requestedType) searchQuery.set("type", requestedType); if (category) searchQuery.set("category", category);
   if (minPrice !== null) searchQuery.set("minPrice", String(minPrice)); if (maxPrice !== null) searchQuery.set("maxPrice", String(maxPrice));
-  if (minimumBeds !== null) searchQuery.set("beds", String(minimumBeds)); if (minimumSize !== null) searchQuery.set("minSize", String(minimumSize));
+  if (minimumBeds !== null) searchQuery.set("beds", String(minimumBeds)); if (minimumSize !== null) searchQuery.set("minSize", String(minimumSize)); if (maximumSize !== null) searchQuery.set("maxSize", String(maximumSize));
   searchQuery.set("intent", intent);
   function viewHref(view: 4 | 6) { const next = new URLSearchParams(searchQuery); next.set("view", String(view)); return `/properties?${next.toString()}`; }
   const supabase = await createClient();
@@ -92,6 +96,7 @@ export default async function Properties({ searchParams }: { searchParams: Searc
   if (maxPrice !== null) listingsQuery = listingsQuery.lte("price", maxPrice);
   if (minimumBeds !== null) listingsQuery = listingsQuery.gte("bedrooms", minimumBeds);
   if (minimumSize !== null) listingsQuery = listingsQuery.gte("building_area", minimumSize);
+  if (maximumSize !== null) listingsQuery = listingsQuery.lte("building_area", maximumSize);
 
   const { data } = await listingsQuery;
   const listings = (data ?? []) as PublicListing[];
@@ -122,11 +127,12 @@ export default async function Properties({ searchParams }: { searchParams: Searc
         <form className="marketplace-filters" action="/properties" method="get">
           <input type="hidden" name="intent" value={intent === "rent" ? "rent" : "buy"} />
           <input type="hidden" name="view" value={cardsPerRow} />
-          <label><span>City or area</span><input name="location" defaultValue={location} maxLength={80} placeholder="City, parish, or area" /></label>
+          <label><span>City or area</span><select name="location" defaultValue={location}><option value="">Any city or area</option>{JAMAICA_LOCATIONS.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
           <label><span>Use</span><select name="category" defaultValue={category}><option value="">Any use</option><option value="residential">Residential</option><option value="commercial">Commercial</option></select></label>
           <label><span>Property type</span><select name="type" defaultValue={requestedType}><option value="">Any property</option><option value="house">House</option><option value="apartment">Apartment</option><option value="townhouse">Townhouse</option><option value="land">Land</option><option value="commercial">Commercial</option><option value="development">Development</option></select></label>
-          <label><span>Min price</span><input name="minPrice" inputMode="numeric" defaultValue={minPrice ?? ""} placeholder="Any" /></label><label><span>Max price</span><input name="maxPrice" inputMode="numeric" defaultValue={maxPrice ?? ""} placeholder="Any" /></label>
-          <label><span>Bedrooms</span><select name="beds" defaultValue={minimumBeds ?? ""}><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label><label><span>Min building size</span><input name="minSize" inputMode="numeric" defaultValue={minimumSize ?? ""} placeholder="sq ft" /></label>
+          <fieldset className="filter-range"><legend>Price range</legend><select name="minPrice" defaultValue={minPrice ?? ""}><option value="">Min</option>{PRICE_OPTIONS.map((amount) => <option key={amount} value={amount}>{new Intl.NumberFormat("en-JM", { style: "currency", currency: "JMD", maximumFractionDigits: 0, notation: "compact" }).format(amount)}</option>)}</select><span>to</span><select name="maxPrice" defaultValue={maxPrice ?? ""}><option value="">Max</option>{PRICE_OPTIONS.map((amount) => <option key={amount} value={amount}>{new Intl.NumberFormat("en-JM", { style: "currency", currency: "JMD", maximumFractionDigits: 0, notation: "compact" }).format(amount)}</option>)}</select></fieldset>
+          <label><span>Bedrooms</span><select name="beds" defaultValue={minimumBeds ?? ""}><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label>
+          <fieldset className="filter-range"><legend>Building size</legend><select name="minSize" defaultValue={minimumSize ?? ""}><option value="">Min sq ft</option>{SIZE_OPTIONS.map((size) => <option key={size} value={size}>{new Intl.NumberFormat("en-JM").format(size)}</option>)}</select><span>to</span><select name="maxSize" defaultValue={maximumSize ?? ""}><option value="">Max sq ft</option>{SIZE_OPTIONS.map((size) => <option key={size} value={size}>{new Intl.NumberFormat("en-JM").format(size)}</option>)}</select></fieldset>
           <button className="solid-button" type="submit">Search</button>
         </form>
       </section>
