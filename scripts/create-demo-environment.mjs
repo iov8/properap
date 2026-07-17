@@ -105,9 +105,9 @@ try {
     const area = areas.find((candidate) => candidate.code === item.parishCode);
     if (!area) throw new Error(`Missing parish ${item.parishCode}.`);
     const location = `POINT(${item.lng} ${item.lat})`;
-    const address = await insert("property_addresses", { country_id: country.id, administrative_area_id: area.id, address_line_1: `${item.locality} area (demo, approximate)`, normalized_address: `${item.locality.toLowerCase()} demo ${item.parishCode}`, location, geocode_provider: "demo-area-centroid", geocode_confidence: 0.25 });
+    const address = await insert("property_addresses", { country_id: country.id, administrative_area_id: area.id, address_line_1: `${item.locality} area (demo, approximate)`, normalized_address: `${item.locality.toLowerCase()} demo ${item.parishCode}`, location, geocode_provider: "demo-area-centroid", geocode_confidence: 0.25, created_by_brokerage_id: brokerage.id, created_by_person_id: owner.person.id });
     await record(batch.id, "property_address", address.id, REALTOR_SOURCE, "Public market facts; coordinates are approximate area centroids");
-    const property = await insert("properties", { created_by_brokerage_id: brokerage.id, property_type: item.type, address_id: address.id, address_fingerprint: sha(`${batch.id}:${index}:${item.locality}`) });
+    const property = await insert("properties", { created_by_brokerage_id: brokerage.id, created_by_person_id: owner.person.id, property_type: item.type, address_id: address.id, address_fingerprint: sha(`${batch.id}:${index}:${item.locality}`) });
     await record(batch.id, "property", property.id, REALTOR_SOURCE, "Public market facts");
     const listing = await insert("listings", { brokerage_id: brokerage.id, property_id: property.id, lifecycle_state: "draft", created_by_person_id: owner.person.id });
     await record(batch.id, "listing", listing.id, REALTOR_SOURCE, "Public market facts; original SteadFast summary");
@@ -115,10 +115,11 @@ try {
     await record(batch.id, "listing_assignment", assignment.id);
     const versionId = randomUUID();
     const description = `${item.description} ${DEMO_NOTICE}`;
-    await expect(db.from("listing_versions").insert({ id: versionId, listing_id: listing.id, version_number: 1, revision_state: "approved", submitted_by_person_id: owner.person.id, submitted_at: now, frozen_at: now, approved_at: now, purpose: "sale", property_type: item.type, property_subtype: item.subtype, requested_lifecycle_state: "active", currency: item.currency, price: item.price, title: item.title, description, bedrooms: item.beds, bathrooms: item.baths, building_area: item.building, land_area: item.land, area_unit: "sq_ft", visibility: "public", public_location_precision: "area", public_location_label: `${item.locality}, ${item.parish}`, public_location: location, attributes: { demo: true, factual_source: REALTOR_SOURCE }, content_hash: sha(JSON.stringify(item)), changed_fields: ["initial_demo_record"], created_by_person_id: owner.person.id }), "insert listing version");
+    await expect(db.from("listing_versions").insert({ id: versionId, listing_id: listing.id, version_number: 1, revision_state: "submitted", submitted_by_person_id: owner.person.id, submitted_at: now, frozen_at: now, purpose: "sale", property_type: item.type, property_subtype: item.subtype, requested_lifecycle_state: "active", currency: item.currency, price: item.price, title: item.title, description, bedrooms: item.beds, bathrooms: item.baths, building_area: item.building, land_area: item.land, area_unit: "sq_ft", visibility: "public", public_location_precision: "area", public_location_label: `${item.locality}, ${item.parish}`, public_location: location, attributes: { demo: true, factual_source: REALTOR_SOURCE }, content_hash: sha(JSON.stringify(item)), changed_fields: ["initial_demo_record"], created_by_person_id: owner.person.id }), "insert listing version");
     await record(batch.id, "listing_version", versionId, REALTOR_SOURCE, "Original SteadFast summary of public market facts");
     const review = await insert("listing_reviews", { listing_version_id: versionId, reviewer_person_id: owner.person.id, reviewer_membership_id: membership.id, decision: "approved", comment: "Approved as an explicitly recorded simulation.", is_self_approval: true });
     await record(batch.id, "listing_review", review.id);
+    await expect(db.from("listing_versions").update({ revision_state: "approved", approved_at: now }).eq("id", versionId), "approve listing version");
     await expect(db.from("listings").update({ lifecycle_state: "active", current_approved_version_id: versionId, current_assignment_id: assignment.id, published_at: now }).eq("id", listing.id), "activate listing");
 
     const image = images[index % images.length];

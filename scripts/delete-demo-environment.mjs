@@ -42,7 +42,8 @@ async function removeById(table, type, column = "id") {
 
 const listingIds = ids("listing");
 if (listingIds.length) {
-  await expect(db.from("listings").update({ current_approved_version_id: null, current_assignment_id: null }).in("id", listingIds), "detach listing pointers");
+  const deletedAt = new Date().toISOString();
+  await expect(db.from("listings").update({ lifecycle_state: "archived", current_approved_version_id: null, current_assignment_id: null, published_at: null, unpublished_at: deletedAt, archived_at: deletedAt }).in("id", listingIds), "archive demo listings");
   await expect(db.from("public_listing_snapshots").delete().in("listing_id", listingIds), "delete snapshots");
   await expect(db.from("publication_records").delete().in("listing_id", listingIds), "delete publication records");
   await expect(db.from("listing_version_media").delete().in("listing_id", listingIds), "delete version media links");
@@ -51,19 +52,23 @@ await removeById("listing_shares", "listing_share");
 await removeById("public_listing_media", "public_listing_media");
 await removeById("listing_media_derivatives", "listing_media_derivative");
 await removeById("listing_media", "listing_media");
-await removeById("listing_reviews", "listing_review");
-await removeById("listing_versions", "listing_version");
-await removeById("listing_assignments", "listing_assignment");
-await removeById("listings", "listing");
-await removeById("properties", "property");
-await removeById("property_addresses", "property_address");
-await removeById("professional_sites", "professional_site");
-await removeById("brokerage_memberships", "brokerage_membership");
-await removeById("brokerages", "brokerage");
-await removeById("people", "person");
+const assignmentIds = ids("listing_assignment");
+if (assignmentIds.length) await expect(db.from("listing_assignments").update({ status: "ended", ends_at: new Date().toISOString(), reason: "Recorded demo batch removed" }).in("id", assignmentIds).eq("status", "active"), "end demo assignments");
+const siteIds = ids("professional_site");
+await removeById("site_domains", "site_domain");
+for (const siteId of siteIds) await expect(db.from("professional_sites").update({ status: "retired", slug: `removed-${siteId}` }).eq("id", siteId), "retire demo site");
+const membershipIds = ids("brokerage_membership");
+if (membershipIds.length) await expect(db.from("brokerage_memberships").update({ status: "inactive", ends_at: new Date().toISOString(), reason: "Recorded demo batch removed" }).in("id", membershipIds), "deactivate demo memberships");
+const personIds = ids("person");
+if (personIds.length) {
+  await expect(db.from("professional_profiles").update({ public_slug: null, bio: null, service_areas: [], license_status: "inactive", public_contact_preferences: {} }).in("person_id", personIds), "retire demo professional profiles");
+  await expect(db.from("people").update({ account_status: "closed", primary_email: null, primary_phone: null }).in("id", personIds), "close demo people");
+}
+const brokerageIds = ids("brokerage");
+for (const brokerageId of brokerageIds) await expect(db.from("brokerages").update({ status: "closed", closed_at: new Date().toISOString(), slug: `removed-${brokerageId}` }).eq("id", brokerageId), "close demo brokerage");
 for (const userId of ids("auth_user")) {
   const { error } = await db.auth.admin.deleteUser(userId);
-  if (error) throw new Error(`delete auth user: ${error.message}`);
+  if (error && !error.message.toLowerCase().includes("not found")) throw new Error(`delete auth user: ${error.message}`);
 }
 await expect(db.from("demo_data_batches").update({ status: "deleted", deleted_at: new Date().toISOString() }).eq("id", batch.id), "close demo batch");
 console.log(JSON.stringify({ batchId: batch.id, label: batch.label, status: "deleted", recordedItems: records.length }, null, 2));

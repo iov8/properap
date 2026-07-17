@@ -30,7 +30,7 @@ Deletion requires an exact batch identifier:
 node scripts/delete-demo-environment.mjs --confirm=<demo-batch-uuid>
 ```
 
-The deletion utility removes only IDs recorded in that batch, removes its storage objects and auth users, and then retains the ledger with a `deleted` status for auditability.
+The deletion utility acts only on IDs recorded in that batch. It removes public projections, protected storage objects, shares, and auth access; retires professional sites; closes the demo people and brokerage; and archives the immutable listing workflow records. The ledger is retained with a `deleted` status for auditability. Approved versions and review evidence are intentionally not erased from the internal audit history.
 
 ## Session behavior
 
