@@ -11,7 +11,7 @@ import { AutoFitHeading } from "@/app/components/auto-fit-heading";
 
 type SiteListing = {
   listing_id: string; title: string; purpose: string; property_type: string;
-  price: number; currency: string; bedrooms: number | null; bathrooms: number | null;
+  price: number; currency: string; bedrooms: number | null; bathrooms: number | null; building_area: number | null;
   public_location_label: string | null; administrative_area_name: string;
   public_latitude: number | null; public_longitude: number | null;
   assigned_agent_name: string; brokerage_name: string; is_demo: boolean;
@@ -43,7 +43,7 @@ export async function PublicProfessionalSite({ slug, expectedType }: { slug: str
     ]);
     listingIds = [...new Set([...(owned ?? []), ...(shared ?? [])].map((row) => row.listing_id))];
   }
-  let listingsQuery = supabase.from("public_listing_snapshots").select("listing_id,title,purpose,property_type,price,currency,bedrooms,bathrooms,public_location_label,administrative_area_name,public_latitude,public_longitude,assigned_agent_name,brokerage_name,is_demo,demo_notice,source_url").order("published_at", { ascending: false });
+  let listingsQuery = supabase.from("public_listing_snapshots").select("listing_id,title,purpose,property_type,price,currency,bedrooms,bathrooms,building_area,public_location_label,administrative_area_name,public_latitude,public_longitude,assigned_agent_name,brokerage_name,is_demo,demo_notice,source_url").order("published_at", { ascending: false });
   if (site.site_type === "brokerage") listingsQuery = listingsQuery.eq("brokerage_id", site.owner_brokerage_id!);
   else if (listingIds.length) listingsQuery = listingsQuery.in("listing_id", listingIds);
   else return <SiteShell site={site} listings={[]} media={[]} assets={assets ?? []} testimonials={(testimonials ?? []) as Testimonial[]} />;
