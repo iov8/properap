@@ -5,12 +5,12 @@ export function BrandLogo({ compact = false }: { compact?: boolean }) {
   return (
     <Link className={`brand-logo${compact ? " compact" : ""}`} href="/" aria-label="SteadFast Realty home">
       <Image
-        src="/steadfast-logo.png"
+        src={compact ? "/steadfast-brand-mark-on-dark.png" : "/steadfast-brand-logo-on-dark.png"}
         alt="SteadFast Realty"
-        width={1536}
-        height={1024}
+        width={compact ? 548 : 936}
+        height={compact ? 304 : 595}
         priority
-        sizes={compact ? "108px" : "132px"}
+        sizes={compact ? "90px" : "180px"}
       />
     </Link>
   );
