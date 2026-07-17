@@ -413,6 +413,10 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .mfa-enrollment label > span { color: #667572; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .mfa-enrollment input { border: 1px solid var(--line); font-size: 22px; letter-spacing: .2em; min-height: 52px; padding: 0 15px; width: 100%; }
 .outline-dark-button { background: transparent; border: 1px solid var(--ink); color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 700; }
+.image-upload-button { align-items: center; display: inline-flex; gap: 8px; justify-content: center; }
+.image-upload-button:disabled { cursor: wait; opacity: .72; }
+.button-spinner { animation: steadfast-spin .8s linear infinite; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; display: inline-block; height: 14px; width: 14px; }
+@keyframes steadfast-spin { to { transform: rotate(360deg); } }
 .mini-list { display: flex; flex-direction: column; margin-top: 18px; }
 .mini-list > div { border-top: 1px solid var(--line); padding: 15px 0; }
 

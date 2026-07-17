@@ -1,12 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { saveSiteBuilderAction, uploadSiteAssetAction } from "@/app/actions/site-builder";
 import { compressListingImage } from "@/lib/media/client-image-compression";
 
 const labels: Record<string, string> = { hero: "Hero", about: "About", search: "Property search", listings: "Listings", testimonials: "Testimonials", contact: "Contact" };
 const allSections = ["hero", "about", "search", "listings", "testimonials", "contact"];
 type Site = { id: string; site_type: string; display_name: string; slug: string; theme: Record<string, unknown> | null; layout: Record<string, unknown> | null; content: Record<string, unknown> | null };
+
+function ImageUploadButton() {
+  const { pending } = useFormStatus();
+  return <button className="outline-dark-button image-upload-button" type="submit" disabled={pending} aria-busy={pending}>
+    {pending ? <><span className="button-spinner" aria-hidden="true" />Preparing and uploading…</> : "Prepare and upload"}
+  </button>;
+}
 
 export function SiteBuilder({ site }: { site: Site }) {
   const savedOrder = Array.isArray(site.layout?.sectionOrder) ? site.layout.sectionOrder.filter((value): value is string => allSections.includes(String(value))) : allSections;
@@ -38,7 +46,7 @@ export function SiteBuilder({ site }: { site: Site }) {
     </form>
     <form action={uploadSiteAssetAction} className="stack-form site-asset-upload" data-prompt-title="Save this website image?" data-prompt-message="It will be compressed to WebP, stripped of metadata, stored privately, and displayed only through SteadFast." data-prompt-confirm="Save image">
       <input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="placement" value={site.site_type === "brokerage" ? "brokerage_logo" : "profile_photo"} />
-      <label><span>{site.site_type === "brokerage" ? "Brokerage logo" : "Professional photo"}</span><input name="asset" type="file" accept="image/jpeg,image/png,image/webp" onChange={compress} required /></label>{imageError ? <p className="form-error" role="alert">{imageError}</p> : null}<button className="outline-dark-button" type="submit">Prepare and upload</button>
+      <label><span>{site.site_type === "brokerage" ? "Brokerage logo" : "Professional photo"}</span><input name="asset" type="file" accept="image/jpeg,image/png,image/webp" onChange={compress} required /></label>{imageError ? <p className="form-error" role="alert">{imageError}</p> : null}<ImageUploadButton />
     </form>
   </section>;
 }
