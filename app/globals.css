@@ -189,7 +189,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .professional-site-page .professional-site-hero > span, .professional-site-page .professional-site-listings > .section-heading span, .professional-site-testimonials > span, .professional-site-search > span, .professional-site-contact > span { color: var(--site-accent, var(--gold)); }
 .site-profile-photo, .site-logo { border: 3px solid var(--site-accent, var(--gold)); display: block; height: 112px; margin: 0 0 22px; object-fit: cover; width: 112px; }
 .site-profile-photo { border-radius: 50%; }
-.site-logo { background: #fff; height: clamp(400px, 42vw, 520px); max-width: 1120px; object-fit: contain; padding: 18px; width: min(82vw, 1120px); }
+.site-logo { background: #fff; height: clamp(200px, 21vw, 260px); max-width: 560px; object-fit: contain; padding: 12px; width: min(41vw, 560px); }
 .site-rich-content { line-height: 1.75; max-width: 680px; }
 .site-strengths { border-left: 3px solid var(--site-accent, var(--gold)); display: grid; gap: 4px; margin-top: 22px; padding-left: 14px; }
 .professional-site-search, .professional-site-testimonials, .professional-site-contact { margin: 0 auto; max-width: 1240px; padding: 60px clamp(24px, 6vw, 92px); }
