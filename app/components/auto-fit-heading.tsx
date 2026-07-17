@@ -1,8 +1,8 @@
 "use client";
 
-import { useLayoutEffect, useRef, type CSSProperties } from "react";
+import { useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
-export function AutoFitHeading({ children, className, style }: { children: string; className?: string; style?: CSSProperties }) {
+export function AutoFitHeading({ children, className, style }: { children: ReactNode; className?: string; style?: CSSProperties }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useLayoutEffect(() => {
