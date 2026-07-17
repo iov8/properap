@@ -58,4 +58,4 @@ Run `npm run db:verify` and `npm run ci`. The database suite includes creation, 
 
 ## Next implementation slice
 
-Add private media upload authorization and image validation, followed by draft completeness checks and brokerage submission. Public projection and approval remain separate controlled milestones.
+Private media validation and the first brokerage submission/decision cycle are now implemented. Next, add reliable notifications and the fail-closed public listing projection before activating approved content.

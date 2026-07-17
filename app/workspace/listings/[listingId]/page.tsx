@@ -5,6 +5,9 @@ import { z } from "zod";
 import { AccountHeader } from "@/app/components/account-header";
 import { EditListingForm, type EditableListingDraft } from "@/app/components/edit-listing-form";
 import { ListingMediaUploader } from "@/app/components/listing-media-uploader";
+import { ListingSubmissionPanel } from "@/app/components/listing-submission-panel";
+import { ReviewDecisionForm } from "@/app/components/review-decision-form";
+import { StatusMessage } from "@/app/components/status-message";
 import { getActiveMembershipContext } from "@/lib/auth/session";
 import { deriveWorkspaceAccess } from "@/lib/auth/workspace-access";
 import { LISTING_MEDIA_BUCKET } from "@/lib/media/constants";
@@ -34,9 +37,11 @@ type DraftVersion = {
 };
 type Address = { administrative_area_id: string; address_line_1: string; address_line_2: string | null; postal_code: string | null };
 type Property = { property_addresses: Address | null };
+type ReviewRecord = { listing_version_id: string; decision: string; comment: string | null; is_self_approval: boolean; decided_at: string };
 
-export default async function ListingDraftPage({ params }: { params: Promise<{ listingId: string }> }) {
+export default async function ListingDraftPage({ params, searchParams }: { params: Promise<{ listingId: string }>; searchParams: Promise<{ notice?: string; error?: string }> }) {
   const route = await params;
+  const query = await searchParams;
   if (!z.string().uuid().safeParse(route.listingId).success) redirect("/access-denied?reason=listing-record");
   const context = await getActiveMembershipContext(`/workspace/listings/${route.listingId}`);
   if (!context.membership) redirect("/access-denied?reason=brokerage-membership");
@@ -79,6 +84,12 @@ export default async function ListingDraftPage({ params }: { params: Promise<{ l
     publicLocationPrecision: version.public_location_precision,
   } : null;
 
+  const { data: reviewRows } = await context.supabase.from("listing_reviews")
+    .select("listing_version_id,decision,comment,is_self_approval,decided_at")
+    .in("listing_version_id", versions.map((item) => item.id))
+    .order("decided_at", { ascending: false });
+  const reviews = (reviewRows ?? []) as ReviewRecord[];
+
   const { data: mediaLinks } = version ? await context.supabase
     .from("listing_version_media")
     .select("position,listing_media(id,original_filename,object_path,status,width,height)")
@@ -106,11 +117,33 @@ export default async function ListingDraftPage({ params }: { params: Promise<{ l
   }))).filter((media): media is NonNullable<typeof media> => Boolean(media));
 
   return <main className="account-page">
-    <AccountHeader displayName={context.person.display_name} hasWorkspace canManageAgents={access.canManageAgents} canManageListings />
+    <AccountHeader displayName={context.person.display_name} hasWorkspace canManageAgents={access.canManageAgents} canManageListings canReviewListings={access.canReviewListings} />
     <section className="account-hero compact"><span className="eyebrow"><i /> Private listing</span><h1>{version?.title ?? "Listing record"}</h1><p>{brokerage?.display_name ?? "Your brokerage"} · {listing.lifecycle_state.replaceAll("_", " ")}</p></section>
     <div className="listing-wizard-shell">
       <div className="wizard-topline"><Link href="/workspace/listings">← Back to listings</Link><span>{initial ? "Autosave on · private draft" : "Read only"}</span></div>
-      {initial ? <><EditListingForm key={`${listing.id}:${listing.lock_version}`} initial={initial} parishes={parishes ?? []} /><ListingMediaUploader listingId={listing.id} images={readyImages} reservedCount={reservedCount} /></> : <section className="locked-listing-card"><span>Editing closed</span><h2>This version is no longer an editable working draft.</h2><p>Submitted and approved versions are retained exactly as reviewed. The next workflow step will provide the appropriate review or new-revision action.</p></section>}
+      <StatusMessage notice={query.notice} error={query.error} />
+      {initial ? <><EditListingForm key={`${listing.id}:${listing.lock_version}`} initial={initial} parishes={parishes ?? []} /><ListingMediaUploader listingId={listing.id} images={readyImages} reservedCount={reservedCount} /><ListingSubmissionPanel listingId={listing.id} listingVersionId={version.id} lockVersion={listing.lock_version} readyImageCount={readyImages.length} /></> : <>
+        <section className="submitted-listing-summary">
+          <div className="submitted-listing-heading"><span>Version {version?.version_number}</span><h2>{version?.revision_state === "submitted" ? "Submitted snapshot" : "Retained listing snapshot"}</h2><p>This content is immutable and shown exactly as it was submitted or decided.</p></div>
+          <dl>
+            <div><dt>Purpose</dt><dd>{version?.purpose === "sale" ? "For sale" : "Long-term rental"}</dd></div>
+            <div><dt>Price</dt><dd>{version ? new Intl.NumberFormat("en-JM", { style: "currency", currency: "JMD", maximumFractionDigits: 0 }).format(version.price) : "—"}</dd></div>
+            <div><dt>Property type</dt><dd>{version?.property_type.replaceAll("_", " ")}</dd></div>
+            <div><dt>Visibility request</dt><dd>{version?.visibility.replaceAll("_", " ")}</dd></div>
+            <div><dt>Bedrooms</dt><dd>{version?.bedrooms ?? "—"}</dd></div>
+            <div><dt>Bathrooms</dt><dd>{version?.bathrooms ?? "—"}</dd></div>
+          </dl>
+          <article><h3>{version?.title}</h3><p>{version?.description}</p></article>
+        </section>
+        {readyImages.length ? <section className="submitted-media"><div><span>Validated media</span><h2>{readyImages.length} property image{readyImages.length === 1 ? "" : "s"}</h2></div><div className="listing-media-grid">{readyImages.map((image, index) => <figure key={image.id}>
+          {/* Signed, short-lived private URL; optimization proxies must not persist the original. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={image.url} alt={`Submitted property image ${index + 1}`} width={image.width} height={image.height} />
+          <figcaption><span>Image {index + 1}</span><small>{image.width} × {image.height}</small></figcaption>
+        </figure>)}</div></section> : null}
+        {listing.lifecycle_state === "pending_initial_approval" && access.canReviewListings ? <ReviewDecisionForm listingId={listing.id} listingVersionId={version.id} /> : <section className="locked-listing-card"><span>{listing.lifecycle_state === "pending_initial_approval" ? "Brokerage review pending" : version?.revision_state.replaceAll("_", " ")}</span><h2>{listing.lifecycle_state === "pending_initial_approval" ? "This version is awaiting a brokerage decision." : "This listing version is retained as reviewed."}</h2><p>{listing.lifecycle_state === "pending_initial_approval" ? "The assigned agent cannot change the submitted snapshot. An authorized reviewer can approve it, request corrections, or reject it." : "Approved, returned, and rejected submissions remain immutable for a complete brokerage history."}</p></section>}
+      </>}
+      {reviews.length ? <section className="listing-review-history"><div><span>Decision history</span><h2>Brokerage reviews</h2></div>{reviews.map((review) => <article key={`${review.listing_version_id}:${review.decided_at}`}><strong>{review.decision.replaceAll("_", " ")}</strong><small>{new Date(review.decided_at).toLocaleString("en-JM", { dateStyle: "medium", timeStyle: "short" })}{review.is_self_approval ? " · authorized self-approval" : ""}</small>{review.comment ? <p>{review.comment}</p> : null}</article>)}</section> : null}
     </div>
   </main>;
 }

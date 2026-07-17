@@ -296,3 +296,98 @@ function rejectionMessage(code: ImageRejectionCode) {
   if (code === "size_mismatch") return "The uploaded file did not match the selected image.";
   return "This file is not a valid JPEG, PNG, or WebP image.";
 }
+
+const submissionSchema = z.object({
+  listingId: z.string().uuid(),
+  listingVersionId: z.string().uuid(),
+  expectedLockVersion: z.coerce.number().int().positive(),
+});
+
+export type SubmitListingState = { error?: string };
+
+export async function submitListingForReviewAction(
+  _previousState: SubmitListingState,
+  formData: FormData,
+): Promise<SubmitListingState> {
+  const parsed = submissionSchema.safeParse({
+    listingId: readText(formData, "listingId"),
+    listingVersionId: readText(formData, "listingVersionId"),
+    expectedLockVersion: readText(formData, "expectedLockVersion"),
+  });
+  if (!parsed.success) return { error: "The listing reference is invalid. Reload the draft and try again." };
+
+  const context = await getActiveMembershipContext(`/workspace/listings/${parsed.data.listingId}`);
+  if (!context.membership) return { error: "You no longer have brokerage access." };
+  const { error } = await context.supabase.from("submit_listing_version_commands").insert({
+    request_id: randomUUID(),
+    listing_id: parsed.data.listingId,
+    listing_version_id: parsed.data.listingVersionId,
+    expected_lock_version: parsed.data.expectedLockVersion,
+  });
+  if (error?.code === "40001") return { error: "This draft changed after the page opened. Reload it before submitting." };
+  if (error) {
+    if (error.message.includes("image checks")) return { error: "Wait for every image check to finish before submitting." };
+    if (error.message.includes("validated property image")) return { error: "Add at least one valid property image before submitting." };
+    return { error: "The listing could not be submitted. Confirm the details, images, and active representative." };
+  }
+
+  revalidatePath("/workspace");
+  revalidatePath("/workspace/listings");
+  revalidatePath("/workspace/reviews");
+  revalidatePath(`/workspace/listings/${parsed.data.listingId}`);
+  redirect(`/workspace/listings/${parsed.data.listingId}?notice=Submitted+to+your+brokerage+for+review.`);
+}
+
+const reviewDecisionSchema = z.object({
+  listingId: z.string().uuid(),
+  listingVersionId: z.string().uuid(),
+  decision: z.enum(["approved", "changes_requested", "rejected"]),
+  comment: z.string().trim().max(4000),
+}).superRefine((value, context) => {
+  if (value.decision !== "approved" && !value.comment) {
+    context.addIssue({ code: "custom", path: ["comment"], message: "Explain the required correction or rejection reason." });
+  }
+});
+
+export type ReviewListingState = { error?: string };
+
+export async function decideListingReviewAction(
+  _previousState: ReviewListingState,
+  formData: FormData,
+): Promise<ReviewListingState> {
+  const parsed = reviewDecisionSchema.safeParse({
+    listingId: readText(formData, "listingId"),
+    listingVersionId: readText(formData, "listingVersionId"),
+    decision: readText(formData, "decision"),
+    comment: readText(formData, "comment"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the review decision." };
+
+  const context = await getActiveMembershipContext(`/workspace/listings/${parsed.data.listingId}`);
+  const canReview = Boolean(context.membership) && (
+    context.roles.includes("broker")
+    || context.permissions.some((permission) => permission.permission_key === "listing.review" && permission.effect === "allow")
+  );
+  if (!canReview) return { error: "You do not have listing review authority." };
+
+  const { error } = await context.supabase.from("decide_listing_review_commands").insert({
+    request_id: randomUUID(),
+    review_id: randomUUID(),
+    listing_id: parsed.data.listingId,
+    listing_version_id: parsed.data.listingVersionId,
+    decision: parsed.data.decision,
+    comment: parsed.data.comment || null,
+  });
+  if (error) return { error: "This submission could not be decided. It may already have been reviewed or its eligibility changed." };
+
+  revalidatePath("/workspace");
+  revalidatePath("/workspace/listings");
+  revalidatePath("/workspace/reviews");
+  revalidatePath(`/workspace/listings/${parsed.data.listingId}`);
+  const notice = parsed.data.decision === "approved"
+    ? "Listing approved. Public activation remains safely off until the publishing milestone."
+    : parsed.data.decision === "changes_requested"
+      ? "Changes requested. A new editable draft is ready for the agent."
+      : "Submission rejected and retained in its review history.";
+  redirect(`/workspace/reviews?notice=${encodeURIComponent(notice)}`);
+}

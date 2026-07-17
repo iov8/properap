@@ -322,6 +322,40 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .listing-media-upload.upload-error { border-color: #bd4b36; }
 .listing-media-upload.upload-error .listing-media-status { color: #8b3428; font-weight: 700; }
 .listing-media-upload.upload-success { border-color: var(--lime-dark); }
+.submission-panel { align-items: center; background: var(--ink); color: #fff; display: grid; gap: 42px; grid-template-columns: minmax(0, 1fr) 380px; padding: 38px 42px; }
+.submission-panel > div > span, .submitted-listing-heading > span, .submitted-media > div:first-child > span, .review-decision-card > div > span, .listing-review-history > div > span { color: var(--lime-dark); font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.submission-panel h2, .submitted-listing-summary h2, .submitted-media h2, .review-decision-card h2, .listing-review-history h2 { font-family: Georgia, serif; font-size: 29px; font-weight: 400; margin: 8px 0; }
+.submission-panel p { color: rgba(255,255,255,.68); font-size: 11px; line-height: 1.65; margin: 0; }
+.submission-panel form { align-items: flex-start; display: flex; flex-direction: column; gap: 16px; }
+.submission-panel form label { align-items: flex-start; color: rgba(255,255,255,.78); display: flex; font-size: 10px; gap: 9px; line-height: 1.5; }
+.submission-panel form input { accent-color: var(--lime); margin-top: 2px; }
+.submission-panel .inline-form-error, .review-decision-card .inline-form-error { color: #f4a694; font-size: 11px; font-weight: 700; }
+.submitted-listing-summary, .submitted-media, .review-decision-card, .listing-review-history { background: var(--paper); border: 1px solid var(--line); border-top: 0; padding: 42px; }
+.submitted-listing-heading p, .submitted-media > div:first-child p, .review-decision-card > div > p { color: #687774; font-size: 11px; line-height: 1.6; margin: 0; }
+.submitted-listing-summary dl { display: grid; gap: 1px; grid-template-columns: repeat(3, 1fr); margin: 28px 0; }
+.submitted-listing-summary dl > div { background: var(--cream); padding: 17px; }
+.submitted-listing-summary dt { color: #71807c; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.submitted-listing-summary dd { font-size: 12px; margin: 7px 0 0; text-transform: capitalize; }
+.submitted-listing-summary article { border-top: 1px solid var(--line); padding-top: 26px; }
+.submitted-listing-summary article h3 { font-family: Georgia, serif; font-size: 23px; font-weight: 400; margin: 0 0 10px; }
+.submitted-listing-summary article p { color: #52635f; font-size: 12px; line-height: 1.75; margin: 0; white-space: pre-wrap; }
+.review-decision-card { display: grid; gap: 26px; }
+.review-decision-card fieldset { border: 0; display: grid; gap: 10px; margin: 0; padding: 0; }
+.review-decision-card legend, .review-comment > span { color: #667572; font-size: 9px; font-weight: 700; letter-spacing: .12em; margin-bottom: 10px; text-transform: uppercase; }
+.review-decision-card fieldset label { align-items: flex-start; background: var(--cream); border: 1px solid var(--line); cursor: pointer; display: flex; gap: 13px; padding: 16px; }
+.review-decision-card fieldset input { accent-color: var(--ink); margin-top: 3px; }
+.review-decision-card fieldset strong, .review-decision-card fieldset small { display: block; }
+.review-decision-card fieldset strong { font-size: 12px; }
+.review-decision-card fieldset small { color: #71807c; font-size: 9px; line-height: 1.5; margin-top: 4px; }
+.review-comment { display: flex; flex-direction: column; }
+.review-comment textarea { border: 1px solid var(--line); line-height: 1.6; min-height: 130px; padding: 14px; resize: vertical; }
+.review-decision-card > .solid-button { justify-self: start; }
+.listing-review-history { display: grid; gap: 14px; }
+.listing-review-history article { background: var(--cream); border-left: 3px solid var(--lime-dark); padding: 17px 19px; }
+.listing-review-history article strong { font-size: 11px; text-transform: capitalize; }
+.listing-review-history article small { color: #71807c; display: block; font-size: 9px; margin-top: 5px; }
+.listing-review-history article p { color: #52635f; font-size: 11px; line-height: 1.6; margin: 10px 0 0; }
+.review-back { align-items: center; display: inline-flex; min-height: 42px; padding: 0 17px; }
 
 @media (max-width: 960px) {
   .auth-page { grid-template-columns: 1fr; }
@@ -333,6 +367,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
   .wizard-section { grid-template-columns: 1fr; }
   .listing-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .listing-media-upload { grid-template-columns: auto 1fr; }
+  .submission-panel { grid-template-columns: 1fr; }
   .listing-media-status { grid-column: 1 / -1; justify-self: start; text-align: left; }
   .listing-records > article { grid-template-columns: 120px minmax(0, 1fr); }
   .listing-record-note { grid-column: 1 / -1; }
@@ -358,6 +393,8 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
   .listing-wizard-shell, .listing-index { padding-left: 16px; padding-right: 16px; }
   .wizard-section { gap: 26px; padding: 28px 22px; }
   .listing-media-card { padding: 28px 22px; }
+  .submission-panel, .submitted-listing-summary, .submitted-media, .review-decision-card, .listing-review-history { padding: 28px 22px; }
+  .submitted-listing-summary dl { grid-template-columns: 1fr 1fr; }
   .listing-media-grid { grid-template-columns: 1fr; }
   .listing-media-upload { align-items: start; grid-template-columns: 1fr; }
   .listing-media-status { grid-column: 1; }
