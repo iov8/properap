@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { BrandLogo } from "@/app/components/brand-logo";
+import { PropertySearchCard } from "@/app/components/property-search-card";
 import { publicPageMetadata } from "@/lib/seo/metadata";
 
 export const metadata = publicPageMetadata({
@@ -9,8 +10,6 @@ export const metadata = publicPageMetadata({
   path: "/",
   keywords: ["Jamaica real estate", "Jamaica property", "Jamaica real estate agents"],
 });
-
-const propertyTypes = ["House", "Apartment", "Townhouse", "Land", "Commercial"];
 
 const platformHighlights = [
   {
@@ -29,23 +28,6 @@ const platformHighlights = [
     body: "Share approved listings across agent websites while preserving ownership and contact choice.",
   },
 ];
-
-function ArrowIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
-      <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.8" />
-    </svg>
-  );
-}
-
-function PinIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21">
-      <path d="M12 21s6-5.5 6-12a6 6 0 1 0-12 0c0 6.5 6 12 6 12Z" fill="none" stroke="currentColor" strokeWidth="1.7" />
-      <circle cx="12" cy="9" r="2.2" fill="currentColor" />
-    </svg>
-  );
-}
 
 export default async function Home() {
   await connection();
@@ -73,23 +55,7 @@ export default async function Home() {
             A calmer, clearer way to discover property and work with trusted real estate professionals.
           </p>
 
-          <form className="property-search" action="/properties" method="get">
-            <label className="search-location">
-              <span>Where are you looking?</span>
-              <span className="search-input-row">
-                <PinIcon />
-                <input name="location" maxLength={80} placeholder="Kingston, Montego Bay, St. Ann..." />
-              </span>
-            </label>
-            <label>
-              <span>Property type</span>
-              <select name="type" defaultValue="">
-                <option value="">Any property</option>
-                {propertyTypes.map((type) => <option key={type} value={type.toLowerCase()}>{type}</option>)}
-              </select>
-            </label>
-            <button type="submit" aria-label="Search properties"><ArrowIcon /></button>
-          </form>
+          <PropertySearchCard />
 
           <div className="hero-footnote">
             <span>Verified brokerage workflow</span>

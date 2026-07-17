@@ -220,10 +220,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .professional-site-search, .professional-site-testimonials, .professional-site-contact { margin: 0 auto; max-width: 1240px; padding: 60px clamp(24px, 6vw, 92px); }
 .professional-site-search { background: var(--sage); }
 .professional-site-search h2, .professional-site-testimonials h2, .professional-site-contact h2 { font-family: Georgia, serif; font-size: clamp(30px, 4vw, 46px); font-weight: 400; margin: 8px 0 22px; }
-.professional-site-search form { align-items: end; display: grid; gap: 12px; grid-template-columns: 2fr 1fr auto; max-width: 800px; }
-.professional-site-search label { display: grid; font-size: 10px; font-weight: 700; gap: 7px; letter-spacing: .08em; text-transform: uppercase; }
-.professional-site-search input, .professional-site-search select { background: #fff; border: 1px solid var(--sand); min-height: 45px; padding: 0 12px; }
-.professional-site-search button { background: var(--site-primary, var(--evergreen)); border: 0; color: #fff; cursor: pointer; min-height: 45px; padding: 0 18px; }
+.professional-site-search .property-search { max-width: 680px; }
 .professional-site-testimonials { background: var(--site-primary, var(--evergreen)); color: #fff; text-align: center; }
 .site-testimonial { margin: 0 auto; max-width: 720px; min-height: 245px; }
 .site-testimonial img { border-radius: 50%; height: 78px; margin: 0 auto 18px; object-fit: cover; width: 78px; }
