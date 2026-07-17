@@ -177,7 +177,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .professional-pagination button:disabled { cursor: not-allowed; opacity: .42; }
 .professional-pagination span { color: #657572; font-size: 12px; }
 .property-result-card { background: #fff; border: 1px solid rgba(16,44,42,.13); border-radius: 12px; min-width: 0; overflow: hidden; transition: box-shadow .2s, transform .2s; }
-.property-result-card:hover { box-shadow: 0 14px 32px rgba(16,44,42,.14); transform: translateY(-2px); }
+.property-result-card:hover { border-color: var(--teal); box-shadow: 0 14px 32px rgba(16,44,42,.14); transform: translateY(-2px); }
 .property-card-visual { aspect-ratio: 4 / 3; background: var(--sage); color: var(--ink); display: block; min-height: 0; overflow: hidden; position: relative; }
 .property-card-visual::before { display: none; }
 .property-card-visual > img { height: 100%; inset: 0; object-fit: cover; position: absolute; width: 100%; }
