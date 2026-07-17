@@ -10,6 +10,8 @@ export type PropertySearchParams = {
   minimumSize: number | null;
   maximumSize: number | null;
   intent: "buy" | "rent";
+  brokerageSlug: string;
+  agentSlug: string;
 };
 
 export type PublicListing = {
@@ -51,6 +53,10 @@ function wholeNumber(value: string | string[] | null | undefined, maximum = 1_00
   return Number.isFinite(parsed) && parsed >= 0 && parsed <= maximum ? Math.floor(parsed) : null;
 }
 
+function safeSlug(value: string | string[] | null | undefined) {
+  return firstParameter(value).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 100);
+}
+
 export function parsePropertySearchParams(params: Record<string, string | string[] | undefined>): PropertySearchParams {
   return {
     location: safeSearchWords(params.location),
@@ -62,6 +68,8 @@ export function parsePropertySearchParams(params: Record<string, string | string
     minimumSize: wholeNumber(params.minSize, 10_000_000),
     maximumSize: wholeNumber(params.maxSize, 10_000_000),
     intent: firstParameter(params.intent) === "rent" ? "rent" : "buy",
+    brokerageSlug: safeSlug(params.brokerage),
+    agentSlug: safeSlug(params.agent),
   };
 }
 
@@ -83,6 +91,8 @@ export async function searchPublicListings(supabase: SupabaseClient, filters: Pr
   if (filters.minimumBeds !== null) query = query.gte("bedrooms", filters.minimumBeds);
   if (filters.minimumSize !== null) query = query.gte("building_area", filters.minimumSize);
   if (filters.maximumSize !== null) query = query.lte("building_area", filters.maximumSize);
+  if (filters.brokerageSlug) query = query.eq("brokerage_slug", filters.brokerageSlug);
+  if (filters.agentSlug) query = query.eq("assigned_agent_slug", filters.agentSlug);
 
   const { data } = await query;
   const listings = (data ?? []) as PublicListing[];
@@ -93,8 +103,11 @@ export async function searchPublicListings(supabase: SupabaseClient, filters: Pr
   return { listings, covers: (covers ?? []) as ListingCover[] };
 }
 
-export async function getPublicLocationOptions(supabase: SupabaseClient) {
-  const { data } = await supabase.from("public_listing_snapshots").select("public_location_label,administrative_area_name").limit(1000);
+export async function getPublicLocationOptions(supabase: SupabaseClient, filters?: Pick<PropertySearchParams, "brokerageSlug" | "agentSlug">) {
+  let query = supabase.from("public_listing_snapshots").select("public_location_label,administrative_area_name").limit(1000);
+  if (filters?.brokerageSlug) query = query.eq("brokerage_slug", filters.brokerageSlug);
+  if (filters?.agentSlug) query = query.eq("assigned_agent_slug", filters.agentSlug);
+  const { data } = await query;
   return Array.from(new Set((data ?? []).flatMap((listing) => [listing.public_location_label, listing.administrative_area_name]).filter((value): value is string => Boolean(value?.trim())).map((value) => value.trim())))
     .sort((a, b) => a.localeCompare(b, "en-JM", { sensitivity: "base" }));
 }

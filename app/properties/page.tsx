@@ -22,7 +22,7 @@ export default async function Properties({ searchParams }: { searchParams: Searc
   const cardsPerRow = (Array.isArray(params.view) ? params.view[0] : params.view) === "4" ? 4 : 6;
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
-  const [{ listings, covers }, locationOptions] = await Promise.all([searchPublicListings(supabase, filters), getPublicLocationOptions(supabase)]);
+  const [{ listings, covers }, locationOptions] = await Promise.all([searchPublicListings(supabase, filters), getPublicLocationOptions(supabase, filters)]);
 
   return (
     <main className="search-page">

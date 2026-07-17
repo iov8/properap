@@ -78,6 +78,8 @@ export function PropertySearchResults({ initialListings, initialCovers, initialF
       <div><span className="eyebrow dark"><i /> Brokerage-approved inventory</span><h1>{initialFilters.location ? `Property in ${initialFilters.location}` : `A place to ${initialFilters.intent}.`}</h1><p aria-live="polite">{isLoading ? "Updating listings…" : `${listings.length} active ${listings.length === 1 ? "listing" : "listings"} from eligible Jamaican brokerages.`}</p></div>
       <form className="marketplace-filters" onSubmit={submitSearch}>
         <input type="hidden" name="intent" value={initialFilters.intent} />
+        {initialFilters.brokerageSlug ? <input type="hidden" name="brokerage" value={initialFilters.brokerageSlug} /> : null}
+        {initialFilters.agentSlug ? <input type="hidden" name="agent" value={initialFilters.agentSlug} /> : null}
         <label><span>City or area</span><select name="location" defaultValue={initialFilters.location}><option value="">Any city or area</option>{locationOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
         <label><span>Use</span><select name="category" defaultValue={initialFilters.category}><option value="">Any use</option><option value="residential">Residential</option><option value="commercial">Commercial</option></select></label>
         <label><span>Property type</span><select name="type" defaultValue={initialFilters.requestedType}><option value="">Any property</option><option value="house">House</option><option value="apartment">Apartment</option><option value="townhouse">Townhouse</option><option value="land">Land</option><option value="commercial">Commercial</option><option value="development">Development</option></select></label>
