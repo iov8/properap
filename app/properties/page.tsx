@@ -27,6 +27,8 @@ type PublicListing = {
   description: string;
   bedrooms: number | null;
   bathrooms: number | null;
+  building_area: number | null;
+  land_area: number | null;
   administrative_area_name: string;
   public_location_label: string | null;
   brokerage_name: string;
@@ -41,6 +43,7 @@ function firstParameter(value: string | string[] | undefined) {
 function safeSearchWords(value: string | string[] | undefined) {
   return firstParameter(value).slice(0, 80).replace(/[^\p{L}\p{N}\s'-]/gu, " ").replace(/\s+/g, " ").trim();
 }
+function wholeNumber(value: string | string[] | undefined, maximum = 1_000_000_000) { const parsed = Number(firstParameter(value)); return Number.isFinite(parsed) && parsed >= 0 && parsed <= maximum ? Math.floor(parsed) : null; }
 
 function formatPrice(listing: PublicListing) {
   const amount = new Intl.NumberFormat("en-JM", {
@@ -56,12 +59,15 @@ export default async function Properties({ searchParams }: { searchParams: Searc
   const params = await searchParams;
   const location = safeSearchWords(params.location);
   const requestedType = firstParameter(params.type).toLowerCase().slice(0, 30);
+  const category = firstParameter(params.category).toLowerCase();
+  const minPrice = wholeNumber(params.minPrice); const maxPrice = wholeNumber(params.maxPrice);
+  const minimumBeds = wholeNumber(params.beds, 20); const minimumSize = wholeNumber(params.minSize, 10_000_000);
   const intent = firstParameter(params.intent) === "rent" ? "rent" : "buy";
   const supabase = await createClient();
 
   let listingsQuery = supabase
     .from("public_listing_snapshots")
-    .select("listing_id,lifecycle_state,purpose,property_type,property_subtype,currency,price,price_period,title,description,bedrooms,bathrooms,administrative_area_name,public_location_label,brokerage_name,assigned_agent_name,ready_media_count")
+    .select("listing_id,lifecycle_state,purpose,property_type,property_subtype,currency,price,price_period,title,description,bedrooms,bathrooms,building_area,land_area,administrative_area_name,public_location_label,brokerage_name,assigned_agent_name,ready_media_count")
     .eq("purpose", intent === "rent" ? "long_term_rent" : "sale")
     .order("published_at", { ascending: false })
     .limit(24);
@@ -72,6 +78,12 @@ export default async function Properties({ searchParams }: { searchParams: Searc
   } else if (["house", "apartment", "townhouse"].includes(requestedType)) {
     listingsQuery = listingsQuery.eq("property_type", "residential").ilike("property_subtype", requestedType);
   }
+  if (category === "residential") listingsQuery = listingsQuery.eq("property_type", "residential");
+  if (category === "commercial") listingsQuery = listingsQuery.eq("property_type", "commercial");
+  if (minPrice !== null) listingsQuery = listingsQuery.gte("price", minPrice);
+  if (maxPrice !== null) listingsQuery = listingsQuery.lte("price", maxPrice);
+  if (minimumBeds !== null) listingsQuery = listingsQuery.gte("bedrooms", minimumBeds);
+  if (minimumSize !== null) listingsQuery = listingsQuery.gte("building_area", minimumSize);
 
   const { data } = await listingsQuery;
   const listings = (data ?? []) as PublicListing[];
@@ -101,8 +113,11 @@ export default async function Properties({ searchParams }: { searchParams: Searc
         <div><span className="eyebrow dark"><i /> Brokerage-approved inventory</span><h1>{location ? `Property in ${location}` : `A place to ${intent}.`}</h1><p>{listings.length} active {listings.length === 1 ? "listing" : "listings"} from eligible Jamaican brokerages.</p></div>
         <form className="marketplace-filters" action="/properties" method="get">
           <input type="hidden" name="intent" value={intent === "rent" ? "rent" : "buy"} />
-          <label><span>Location</span><input name="location" defaultValue={location} maxLength={80} placeholder="Parish or area" /></label>
+          <label><span>City or area</span><input name="location" defaultValue={location} maxLength={80} placeholder="City, parish, or area" /></label>
+          <label><span>Use</span><select name="category" defaultValue={category}><option value="">Any use</option><option value="residential">Residential</option><option value="commercial">Commercial</option></select></label>
           <label><span>Property type</span><select name="type" defaultValue={requestedType}><option value="">Any property</option><option value="house">House</option><option value="apartment">Apartment</option><option value="townhouse">Townhouse</option><option value="land">Land</option><option value="commercial">Commercial</option><option value="development">Development</option></select></label>
+          <label><span>Min price</span><input name="minPrice" inputMode="numeric" defaultValue={minPrice ?? ""} placeholder="Any" /></label><label><span>Max price</span><input name="maxPrice" inputMode="numeric" defaultValue={maxPrice ?? ""} placeholder="Any" /></label>
+          <label><span>Bedrooms</span><select name="beds" defaultValue={minimumBeds ?? ""}><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label><label><span>Min building size</span><input name="minSize" inputMode="numeric" defaultValue={minimumSize ?? ""} placeholder="sq ft" /></label>
           <button className="solid-button" type="submit">Search</button>
         </form>
       </section>

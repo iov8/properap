@@ -24,6 +24,8 @@ const ids = (type) => records.filter((record) => record.record_type === type).ma
 
 const mediaIds = ids("listing_media");
 const derivativeIds = ids("listing_media_derivative");
+const siteAssetIds = ids("site_asset");
+const personProfileAssetIds = ids("person_profile_asset");
 if (mediaIds.length) {
   const media = await expect(db.from("listing_media").select("object_path").in("id", mediaIds), "load original object paths");
   const paths = media.map((item) => item.object_path);
@@ -33,6 +35,12 @@ if (derivativeIds.length) {
   const derivatives = await expect(db.from("listing_media_derivatives").select("object_path").in("id", derivativeIds), "load derivative paths");
   const paths = derivatives.map((item) => item.object_path);
   if (paths.length) await expect(db.storage.from("listing-public-derivatives").remove(paths), "remove public derivatives");
+}
+for (const assetIds of [siteAssetIds, personProfileAssetIds]) {
+  if (!assetIds.length) continue;
+  const table = assetIds === siteAssetIds ? "site_assets" : "person_profile_assets";
+  const assets = await expect(db.from(table).select("object_path").in("id", assetIds), `load ${table} paths`);
+  if (assets.length) await expect(db.storage.from("professional-site-assets").remove(assets.map((item) => item.object_path)), `remove ${table} objects`);
 }
 
 async function removeById(table, type, column = "id") {
@@ -49,6 +57,10 @@ if (listingIds.length) {
   await expect(db.from("listing_version_media").delete().in("listing_id", listingIds), "delete version media links");
 }
 await removeById("listing_shares", "listing_share");
+await removeById("site_testimonials", "site_testimonial");
+await removeById("site_assets", "site_asset");
+await removeById("person_profile_assets", "person_profile_asset");
+await removeById("brokerage_subscription_records", "brokerage_subscription");
 await removeById("public_listing_media", "public_listing_media");
 await removeById("listing_media_derivatives", "listing_media_derivative");
 await removeById("listing_media", "listing_media");

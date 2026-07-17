@@ -25,6 +25,7 @@ export function AccountHeader({
       <nav aria-label="Account navigation">
         <Link href="/properties">Properties</Link>
         {hasWorkspace ? <Link href="/workspace">Workspace</Link> : null}
+        {hasWorkspace ? <Link href="/workspace/site">Website</Link> : null}
         {canManageListings ? <Link href="/workspace/listings">Listings</Link> : null}
         {canReviewListings ? <Link href="/workspace/reviews">Reviews</Link> : null}
         {canShareListings ? <Link href="/workspace/sharing">Sharing</Link> : null}
