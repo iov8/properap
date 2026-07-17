@@ -17,6 +17,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { data: image, error } = await admin.storage.from(protectedAsset.bucket_id).download(protectedAsset.object_path);
   if (error || !image) return new NextResponse(null, { status: 404 });
   const bytes = new Uint8Array(await image.arrayBuffer());
-  const safeImage = bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? bytes.slice(3) : bytes;
+  const safeImage = bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? image.slice(3, image.size, "image/webp") : image;
   return new NextResponse(safeImage, { headers: { "Cache-Control": "private, no-store", "Content-Disposition": "inline; filename=steadfast-profile.webp", "Content-Type": "image/webp", "Content-Security-Policy": "default-src 'none'; sandbox", "Cross-Origin-Resource-Policy": "same-site", "X-Content-Type-Options": "nosniff", "X-Robots-Tag": "noimageindex, noarchive" } });
 }

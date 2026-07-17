@@ -72,7 +72,7 @@ async function imageBytes(image: Blob) {
   const bytes = new Uint8Array(await image.arrayBuffer());
   // Legacy prepared demo files can contain a UTF-8 BOM before the WebP RIFF header.
   // Strip it at delivery time so browsers receive a standards-compliant image.
-  return bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? bytes.slice(3) : bytes;
+  return bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? image.slice(3, image.size, "image/webp") : image;
 }
 
 function responseHeaders(etag: string) {
