@@ -3,150 +3,1107 @@
 import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { createSiteTestimonialAction, removeSiteTestimonialAction, saveSiteBuilderAction, updateSiteTestimonialAction, uploadSiteAssetAction } from "@/app/actions/site-builder";
+import {
+  createSiteTestimonialAction,
+  removeSiteTestimonialAction,
+  saveSiteBuilderAction,
+  updateSiteTestimonialAction,
+  uploadSiteAssetAction,
+} from "@/app/actions/site-builder";
 import { compressListingImage } from "@/lib/media/client-image-compression";
 import { CreateListingForm } from "@/app/components/create-listing-form";
 
-const labels: Record<string, string> = { hero: "Hero", about: "About", team: "Brokerage team", search: "Property search", listings: "Listings", testimonials: "Testimonials", contact: "Contact" };
-const allSections = ["hero", "about", "team", "search", "listings", "testimonials", "contact"];
-type Site = { id: string; site_type: string; display_name: string; headline: string | null; slug: string; theme: Record<string, unknown> | null; layout: Record<string, unknown> | null; content: Record<string, unknown> | null };
-type SiteTheme = { primary: string; accent: string; background: string; text: string };
-type Testimonial = { id: string; site_id: string; author_name: string; author_context: string | null; quote: string; asset_id: string | null; position: number; created_at: string };
+const labels: Record<string, string> = {
+  hero: "Hero",
+  about: "About",
+  team: "Brokerage team",
+  search: "Property search",
+  listings: "Listings",
+  testimonials: "Testimonials",
+  contact: "Contact",
+};
+const allSections = [
+  "hero",
+  "about",
+  "team",
+  "search",
+  "listings",
+  "testimonials",
+  "contact",
+];
+type Site = {
+  id: string;
+  site_type: string;
+  display_name: string;
+  headline: string | null;
+  slug: string;
+  theme: Record<string, unknown> | null;
+  layout: Record<string, unknown> | null;
+  content: Record<string, unknown> | null;
+};
+type SiteTheme = {
+  primary: string;
+  accent: string;
+  background: string;
+  text: string;
+};
+type Testimonial = {
+  id: string;
+  site_id: string;
+  author_name: string;
+  author_context: string | null;
+  quote: string;
+  asset_id: string | null;
+  position: number;
+  created_at: string;
+};
 type SiteAsset = { id: string; site_id: string; placement: string };
-type ListingVersion = { version_number: number; title: string; purpose: string; price: number; currency: string; revision_state: string };
-type Listing = { id: string; lifecycle_state: string; updated_at: string; listing_versions: ListingVersion[] | null };
+type ListingVersion = {
+  version_number: number;
+  title: string;
+  purpose: string;
+  price: number;
+  currency: string;
+  revision_state: string;
+};
+type Listing = {
+  id: string;
+  lifecycle_state: string;
+  updated_at: string;
+  listing_versions: ListingVersion[] | null;
+};
 type Parish = { id: string; name: string };
 const themeFields: { key: keyof SiteTheme; label: string; help: string }[] = [
-  { key: "primary", label: "Hero background", help: "The large banner behind your brokerage name." },
-  { key: "accent", label: "Accent color", help: "Buttons, highlights, and small premium details." },
-  { key: "background", label: "Page background", help: "The light background behind your website sections." },
-  { key: "text", label: "Body text", help: "Main text on light page sections." },
+  {
+    key: "primary",
+    label: "Hero background",
+    help: "The large banner behind your brokerage name.",
+  },
+  {
+    key: "accent",
+    label: "Accent color",
+    help: "Buttons, highlights, and small premium details.",
+  },
+  {
+    key: "background",
+    label: "Page background",
+    help: "The light background behind your website sections.",
+  },
+  {
+    key: "text",
+    label: "Body text",
+    help: "Main text on light page sections.",
+  },
 ];
 
 function ImageUploadButton() {
   const { pending } = useFormStatus();
-  return <button className="outline-dark-button image-upload-button" type="submit" disabled={pending} aria-busy={pending}>
-    {pending ? <><span className="button-spinner" aria-hidden="true" />Preparing and uploading…</> : "Prepare and upload"}
-  </button>;
+  return (
+    <button
+      className="outline-dark-button image-upload-button"
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+    >
+      {pending ? (
+        <>
+          <span className="button-spinner" aria-hidden="true" />
+          Preparing and uploading…
+        </>
+      ) : (
+        "Prepare and upload"
+      )}
+    </button>
+  );
 }
 
 function AddTestimonialButton() {
   const { pending } = useFormStatus();
-  return <button className="testimonial-add-button full" type="submit" disabled={pending} aria-busy={pending}>
-    {pending ? <><span className="button-spinner" aria-hidden="true" />Adding testimonial…</> : "+ Add testimonial"}
-  </button>;
+  return (
+    <button
+      className="testimonial-add-button full"
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+    >
+      {pending ? (
+        <>
+          <span className="button-spinner" aria-hidden="true" />
+          Adding testimonial…
+        </>
+      ) : (
+        "+ Add testimonial"
+      )}
+    </button>
+  );
 }
 
-export function SiteBuilderTabs({ sites, testimonials, assets, listings, parishes, canCreateListings, initialTab }: { sites: Site[]; testimonials: Testimonial[]; assets: SiteAsset[]; listings: Listing[]; parishes: Parish[]; canCreateListings: boolean; initialTab?: string }) {
-  const orderedSites = [...sites].sort((first, second) => Number(first.site_type === "brokerage") - Number(second.site_type === "brokerage"));
-  const [activeSiteId, setActiveSiteId] = useState(orderedSites.find((site) => initialTab === "broker" ? site.site_type === "brokerage" : initialTab === "agent" && site.site_type === "agent")?.id ?? orderedSites[0]?.id ?? "");
-  const activeSite = orderedSites.find((site) => site.id === activeSiteId) ?? orderedSites[0];
+export function SiteBuilderTabs({
+  sites,
+  testimonials,
+  assets,
+  listings,
+  parishes,
+  canCreateListings,
+  initialTab,
+}: {
+  sites: Site[];
+  testimonials: Testimonial[];
+  assets: SiteAsset[];
+  listings: Listing[];
+  parishes: Parish[];
+  canCreateListings: boolean;
+  initialTab?: string;
+}) {
+  const orderedSites = [...sites].sort(
+    (first, second) =>
+      Number(first.site_type === "brokerage") -
+      Number(second.site_type === "brokerage"),
+  );
+  const [activeSiteId, setActiveSiteId] = useState(
+    orderedSites.find((site) =>
+      initialTab === "broker"
+        ? site.site_type === "brokerage"
+        : initialTab === "agent" && site.site_type === "agent",
+    )?.id ??
+      orderedSites[0]?.id ??
+      "",
+  );
+  const activeSite =
+    orderedSites.find((site) => site.id === activeSiteId) ?? orderedSites[0];
   const selectSite = (site: Site) => {
     setActiveSiteId(site.id);
     const url = new URL(window.location.href);
-    url.searchParams.set("tab", site.site_type === "brokerage" ? "broker" : "agent");
+    url.searchParams.set(
+      "tab",
+      site.site_type === "brokerage" ? "broker" : "agent",
+    );
     window.history.replaceState(null, "", url);
   };
 
   if (!activeSite) return null;
 
-  return <div className="site-builder-tabs">
-    {orderedSites.length > 1 ? <div className="site-builder-tab-list" role="tablist" aria-label="Website settings">
-      {orderedSites.map((site) => <button key={site.id} type="button" role="tab" aria-selected={site.id === activeSite.id} className={site.id === activeSite.id ? "active" : ""} onClick={() => selectSite(site)}>{site.site_type === "brokerage" ? "Broker" : "Agent"}</button>)}
-    </div> : null}
-    <div role="tabpanel" aria-label={`${activeSite.site_type === "brokerage" ? "Broker" : "Agent"} website settings`}>
-      <SiteBuilder site={activeSite} testimonials={testimonials.filter((testimonial) => testimonial.site_id === activeSite.id)} assets={assets.filter((asset) => asset.site_id === activeSite.id)} listings={listings} parishes={parishes} canCreateListings={canCreateListings} />
+  return (
+    <div className="site-builder-tabs">
+      {orderedSites.length > 1 ? (
+        <div
+          className="site-builder-tab-list"
+          role="tablist"
+          aria-label="Website settings"
+        >
+          {orderedSites.map((site) => (
+            <button
+              key={site.id}
+              type="button"
+              role="tab"
+              aria-selected={site.id === activeSite.id}
+              className={site.id === activeSite.id ? "active" : ""}
+              onClick={() => selectSite(site)}
+            >
+              {site.site_type === "brokerage" ? "Broker" : "Agent"}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div
+        role="tabpanel"
+        aria-label={`${activeSite.site_type === "brokerage" ? "Broker" : "Agent"} website settings`}
+      >
+        <SiteBuilder
+          site={activeSite}
+          testimonials={testimonials.filter(
+            (testimonial) => testimonial.site_id === activeSite.id,
+          )}
+          assets={assets.filter((asset) => asset.site_id === activeSite.id)}
+          listings={listings}
+          parishes={parishes}
+          canCreateListings={canCreateListings}
+        />
+      </div>
     </div>
-  </div>;
+  );
 }
 
-export function SiteBuilder({ site, testimonials, assets, listings, parishes, canCreateListings }: { site: Site; testimonials: Testimonial[]; assets: SiteAsset[]; listings: Listing[]; parishes: Parish[]; canCreateListings: boolean }) {
-  const availableSections = site.site_type === "brokerage" ? allSections.filter((section) => section !== "testimonials") : allSections.filter((section) => section !== "team");
-  const savedOrder = Array.isArray(site.layout?.sectionOrder) ? site.layout.sectionOrder.filter((value): value is string => availableSections.includes(String(value))) : availableSections;
-  const [order, setOrder] = useState(savedOrder.length === availableSections.length ? savedOrder : availableSections);
+export function SiteBuilder({
+  site,
+  testimonials,
+  assets,
+  listings,
+  parishes,
+  canCreateListings,
+}: {
+  site: Site;
+  testimonials: Testimonial[];
+  assets: SiteAsset[];
+  listings: Listing[];
+  parishes: Parish[];
+  canCreateListings: boolean;
+}) {
+  const availableSections =
+    site.site_type === "brokerage"
+      ? allSections.filter((section) => section !== "testimonials")
+      : allSections.filter((section) => section !== "team");
+  const savedOrder = Array.isArray(site.layout?.sectionOrder)
+    ? site.layout.sectionOrder.filter((value): value is string =>
+        availableSections.includes(String(value)),
+      )
+    : availableSections;
+  const [order, setOrder] = useState(
+    savedOrder.length === availableSections.length
+      ? savedOrder
+      : availableSections,
+  );
   const [headline, setHeadline] = useState(String(site.headline ?? ""));
-  const [aboutHeading, setAboutHeading] = useState(String(site.content?.aboutHeading ?? ""));
-  const [aboutHtml, setAboutHtml] = useState(String(site.content?.aboutHtml ?? ""));
-  const [contactEmail, setContactEmail] = useState(String(site.content?.contactEmail ?? ""));
-  const [contactPhone, setContactPhone] = useState(String(site.content?.contactPhone ?? ""));
-  const [strengths, setStrengths] = useState(String(site.content?.strengths ?? ""));
+  const [aboutHeading, setAboutHeading] = useState(
+    String(site.content?.aboutHeading ?? ""),
+  );
+  const [aboutHtml, setAboutHtml] = useState(
+    String(site.content?.aboutHtml ?? ""),
+  );
+  const [contactEmail, setContactEmail] = useState(
+    String(site.content?.contactEmail ?? ""),
+  );
+  const [contactPhone, setContactPhone] = useState(
+    String(site.content?.contactPhone ?? ""),
+  );
+  const [strengths, setStrengths] = useState(
+    String(site.content?.strengths ?? ""),
+  );
   const [imageError, setImageError] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
   const [heroFileName, setHeroFileName] = useState("");
   const [testimonialFileName, setTestimonialFileName] = useState("");
-  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [editingTestimonial, setEditingTestimonial] =
+    useState<Testimonial | null>(null);
   const [editTestimonialFileName, setEditTestimonialFileName] = useState("");
   const [unavailableAssetIds, setUnavailableAssetIds] = useState<string[]>([]);
-  const [activePanel, setActivePanel] = useState(site.site_type === "brokerage" ? "brokerage-logo" : "banner");
-  const assetFor = (placement: string) => assets.find((asset) => asset.placement === placement);
+  const [activePanel, setActivePanel] = useState(
+    site.site_type === "brokerage" ? "logo" : "banner",
+  );
+  const assetFor = (placement: string) =>
+    assets.find((asset) => asset.placement === placement);
   const editor = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
-  useEffect(() => { if (editor.current && !initialized.current) { editor.current.innerHTML = aboutHtml; initialized.current = true; } }, [aboutHtml]);
+  useEffect(() => {
+    if (editor.current && !initialized.current) {
+      editor.current.innerHTML = aboutHtml;
+      initialized.current = true;
+    }
+  }, [aboutHtml]);
   const theme = site.theme ?? {};
-  const [siteTheme, setSiteTheme] = useState<SiteTheme>(() => ({ primary: String(theme.primary ?? "#102C2A"), accent: String(theme.accent ?? "#D8A72E"), background: String(theme.background ?? "#FBFAF6"), text: String(theme.text ?? "#17201C") }));
-  const move = (index: number, change: number) => setOrder((current) => { const next = [...current]; const target = index + change; if (target < 0 || target >= next.length) return current; [next[index], next[target]] = [next[target], next[index]]; return next; });
-  const format = (command: string, value?: string) => { editor.current?.focus(); document.execCommand(command, false, value); setAboutHtml(editor.current?.innerHTML ?? ""); };
-  const toggleFormat = (kind: "heading" | "serif" | "large" | "teal") => {
+  const [siteTheme, setSiteTheme] = useState<SiteTheme>(() => ({
+    primary: String(theme.primary ?? "#102C2A"),
+    accent: String(theme.accent ?? "#D8A72E"),
+    background: String(theme.background ?? "#FBFAF6"),
+    text: String(theme.text ?? "#17201C"),
+  }));
+  const move = (index: number, change: number) =>
+    setOrder((current) => {
+      const next = [...current];
+      const target = index + change;
+      if (target < 0 || target >= next.length) return current;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  const format = (command: string, value?: string) => {
     editor.current?.focus();
-    const value = String(kind === "heading" ? document.queryCommandValue("formatBlock") : kind === "serif" ? document.queryCommandValue("fontName") : kind === "large" ? document.queryCommandValue("fontSize") : document.queryCommandValue("foreColor")).toLowerCase();
-    if (kind === "heading") document.execCommand("formatBlock", false, value.includes("h2") ? "p" : "h2");
-    if (kind === "serif") document.execCommand("fontName", false, value.includes("georgia") ? "Arial" : "Georgia");
-    if (kind === "large") document.execCommand("fontSize", false, value === "5" ? "3" : "5");
-    if (kind === "teal") document.execCommand("foreColor", false, value.includes("168c91") || value.includes("22, 140, 145") ? "#17201C" : "#168C91");
+    document.execCommand(command, false, value);
     setAboutHtml(editor.current?.innerHTML ?? "");
   };
-  const compress = async (event: React.ChangeEvent<HTMLInputElement>) => { const selected = event.target.files?.[0]; if (!selected) return; try { const compressed = await compressListingImage(selected); const transfer = new DataTransfer(); transfer.items.add(compressed); event.target.files = transfer.files; setSelectedFileName(selected.name); setImageError(""); } catch { event.target.value = ""; setSelectedFileName(""); setImageError("Choose a clear still image at least 300 pixels wide and high."); } };
-  const compressTestimonial = async (event: React.ChangeEvent<HTMLInputElement>, setFileName: (value: string) => void) => { const selected = event.target.files?.[0]; if (!selected) return; try { const compressed = await compressListingImage(selected); const transfer = new DataTransfer(); transfer.items.add(compressed); event.target.files = transfer.files; setFileName(selected.name); setImageError(""); } catch { event.target.value = ""; setFileName(""); setImageError("Choose a clear still image at least 300 pixels wide and high."); } };
-  const navItems = site.site_type === "brokerage"
-    ? [{ key: "logo", label: "Brokerage logo" }, { key: "header", label: "Header text" }, { key: "color", label: "Color" }, { key: "about", label: "About" }, { key: "listings", label: "Listings" }, { key: "create", label: "Create listing" }]
-    : [{ key: "banner", label: "Banner" }, { key: "header", label: "Header text" }, { key: "color", label: "Color" }, { key: "about", label: "About" }, { key: "listings", label: "Listings" }, { key: "create", label: "Create listing" }, { key: "testimonials", label: "Testimonials" }];
-  const selectPanel = (key: string) => { setActivePanel(key); document.getElementById(`builder-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
-  return <section className="site-builder-workspace">
-    <nav className="site-builder-nav" aria-label="Website editor sections"><span>{site.site_type === "brokerage" ? "Brokerage website" : "Agent website"}</span>{navItems.map((item) => <button key={item.key} type="button" className={activePanel === item.key ? "active" : ""} onClick={() => selectPanel(item.key)}>{item.label}</button>)}</nav>
-    <div className="site-builder-editor-column"><section className="account-card site-builder-card">
-    <div className="card-heading"><span>{site.site_type === "brokerage" ? "Broker's website" : "Agent's website"}</span><h2>{site.display_name}</h2></div>
-    <p>Arrange sections, write your story, and choose a color system. Changes are saved only when you confirm below.</p>
-    <form id={`site-builder-save-${site.id}`} action={saveSiteBuilderAction} className="stack-form" data-prompt-title="Publish these website changes?" data-prompt-message="Your professional website layout, palette, and public content will update for visitors." data-prompt-confirm="Save website">
-      <input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="returnTab" value={site.site_type === "brokerage" ? "broker" : "agent"} /><input type="hidden" name="sectionOrder" value={JSON.stringify(order)} /><input type="hidden" name="content" value={JSON.stringify({ aboutHeading, aboutHtml, contactEmail, contactPhone, strengths })} />
-      <label id="builder-header"><span>Website headline</span><input name="headline" maxLength={240} value={headline} onChange={(event) => setHeadline(event.currentTarget.value)} placeholder="For example: Clear local guidance for Jamaica property decisions." /><small>This appears directly below your {site.site_type === "brokerage" ? "brokerage name" : "name"} on your public {site.site_type === "brokerage" ? "brokerage" : "agent"} website.</small></label>
-      <fieldset id="builder-color" className="theme-editor"><legend>Your color palette</legend>{themeFields.filter(({ key }) => site.site_type === "brokerage" || key !== "primary").map(({ key, label, help }) => <label key={key}><span>{label}</span><input type="color" name={`theme-${key}`} value={siteTheme[key]} onChange={(event) => setSiteTheme((current) => ({ ...current, [key]: event.target.value }))} /><small>{help}</small></label>)}<input type="hidden" name="theme" value={JSON.stringify(siteTheme)} readOnly /></fieldset>
-      <label id="builder-about"><span>About section headline</span><input maxLength={160} value={aboutHeading} onChange={(event) => setAboutHeading(event.currentTarget.value)} placeholder={site.site_type === "brokerage" ? "For example: A brokerage portfolio in one clear place." : "For example: Service built around your property goals."} /><small>This appears as the heading at the start of your About section.</small></label>
-      <label><span>About your service</span><div className="rich-toolbar" aria-label="Text formatting"><button type="button" onClick={() => format("bold")}>Bold</button><button type="button" onClick={() => format("insertUnorderedList")}>Bullets</button><button type="button" onClick={() => toggleFormat("heading")}>Heading</button><button type="button" onClick={() => toggleFormat("serif")}>Serif</button><button type="button" onClick={() => toggleFormat("large")}>Large</button><button type="button" onClick={() => toggleFormat("teal")}>Teal</button></div><div ref={editor} className="rich-editor" contentEditable suppressContentEditableWarning onInput={(event) => setAboutHtml(event.currentTarget.innerHTML)}>{site.content?.aboutHtml ? undefined : "Share your local knowledge, process, and the people you serve."}</div></label>
-      <label><span>Public contact email</span><input type="email" value={contactEmail} onChange={(event) => setContactEmail(event.currentTarget.value)} /></label>
-      <label><span>Public phone</span><input maxLength={40} value={contactPhone} onChange={(event) => setContactPhone(event.currentTarget.value)} /></label><label><span>Career strengths</span><input maxLength={800} value={strengths} onChange={(event) => setStrengths(event.currentTarget.value)} /></label>
-    </form>
-    {site.site_type === "agent" ? <section id="builder-banner" className="site-asset-section agent-hero-background-upload"><div className="card-heading"><span>Agent website banner</span><h2>Ocean-view background</h2></div><p>The included Jamaica ocean view is the default. To use your own, upload a wide JPEG, PNG, or WebP image at <strong>2400 × 800 pixels</strong> (3:1). Files must be at least 1500 × 500 pixels and under 5 MB.</p>{assetFor("hero_background") && !unavailableAssetIds.includes(assetFor("hero_background")!.id) ? <div className="site-asset-preview banner-preview"><img src={`/media/sites/${assetFor("hero_background")!.id}/display.webp`} alt="Current agent website background" onError={() => setUnavailableAssetIds((current) => [...new Set([...current, assetFor("hero_background")!.id])])} /></div> : <div className="site-asset-preview banner-preview default-banner-preview"><span>{assetFor("hero_background") ? "No image uploaded yet" : "Default ocean-view banner in use"}</span></div>}<form action={uploadSiteAssetAction} className="stack-form site-asset-upload" data-prompt-title="Save this agent website background?" data-prompt-message="It will be compressed to WebP, stripped of metadata, and replace the default ocean-view banner on your agent website." data-prompt-confirm="Save background image"><input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="placement" value="hero_background" /><label className="site-file-picker"><span>Background image</span><input className="site-file-input" name="asset" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void compressTestimonial(event, setHeroFileName)} required /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{heroFileName || "No file chosen"}</span></span></label><ImageUploadButton /></form></section> : null}
-    <section id="builder-listings" className="builder-listing-panel">
-      <div className="card-heading"><span>Brokerage inventory</span><h2>Listings</h2></div>
-      <p>Review the listings visible to you. Select a record to edit it, review its approval state, or manage its images.</p>
-      <div className="builder-listing-records">{listings.length ? listings.map((listing) => { const version = [...(listing.listing_versions ?? [])].sort((a, b) => b.version_number - a.version_number)[0]; return <article key={listing.id}><div className="listing-record-status"><span>{listing.lifecycle_state.replaceAll("_", " ")}</span><small>{version?.revision_state.replaceAll("_", " ") ?? "No version"}</small></div><div><h3>{version?.title ?? "Untitled listing"}</h3><p>{version ? `${version.purpose === "sale" ? "For sale" : "Long-term rental"} · ${new Intl.NumberFormat("en-JM", { style: "currency", currency: version.currency, maximumFractionDigits: 0 }).format(version.price)}` : "Listing details unavailable"}</p></div><Link href={`/workspace/listings/${listing.id}`} className="outline-dark-button">Open listing</Link></article>; }) : <div className="builder-listing-empty">No listings are available yet. Create a private draft below to begin.</div>}</div>
+  const toggleFormat = (kind: "heading" | "serif" | "large" | "teal") => {
+    editor.current?.focus();
+    const value = String(
+      kind === "heading"
+        ? document.queryCommandValue("formatBlock")
+        : kind === "serif"
+          ? document.queryCommandValue("fontName")
+          : kind === "large"
+            ? document.queryCommandValue("fontSize")
+            : document.queryCommandValue("foreColor"),
+    ).toLowerCase();
+    if (kind === "heading")
+      document.execCommand(
+        "formatBlock",
+        false,
+        value.includes("h2") ? "p" : "h2",
+      );
+    if (kind === "serif")
+      document.execCommand(
+        "fontName",
+        false,
+        value.includes("georgia") ? "Arial" : "Georgia",
+      );
+    if (kind === "large")
+      document.execCommand("fontSize", false, value === "5" ? "3" : "5");
+    if (kind === "teal")
+      document.execCommand(
+        "foreColor",
+        false,
+        value.includes("168c91") || value.includes("22, 140, 145")
+          ? "#17201C"
+          : "#168C91",
+      );
+    setAboutHtml(editor.current?.innerHTML ?? "");
+  };
+  const compress = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files?.[0];
+    if (!selected) return;
+    try {
+      const compressed = await compressListingImage(selected);
+      const transfer = new DataTransfer();
+      transfer.items.add(compressed);
+      event.target.files = transfer.files;
+      setSelectedFileName(selected.name);
+      setImageError("");
+    } catch {
+      event.target.value = "";
+      setSelectedFileName("");
+      setImageError(
+        "Choose a clear still image at least 300 pixels wide and high.",
+      );
+    }
+  };
+  const compressTestimonial = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setFileName: (value: string) => void,
+  ) => {
+    const selected = event.target.files?.[0];
+    if (!selected) return;
+    try {
+      const compressed = await compressListingImage(selected);
+      const transfer = new DataTransfer();
+      transfer.items.add(compressed);
+      event.target.files = transfer.files;
+      setFileName(selected.name);
+      setImageError("");
+    } catch {
+      event.target.value = "";
+      setFileName("");
+      setImageError(
+        "Choose a clear still image at least 300 pixels wide and high.",
+      );
+    }
+  };
+  const navItems =
+    site.site_type === "brokerage"
+      ? [
+          { key: "logo", label: "Brokerage logo" },
+          { key: "header", label: "Header text" },
+          { key: "color", label: "Color" },
+          { key: "about", label: "About" },
+          { key: "listings", label: "Listings" },
+          { key: "create", label: "Create listing" },
+        ]
+      : [
+          { key: "banner", label: "Banner" },
+          { key: "header", label: "Header text" },
+          { key: "color", label: "Color" },
+          { key: "about", label: "About" },
+          { key: "listings", label: "Listings" },
+          { key: "create", label: "Create listing" },
+          { key: "testimonials", label: "Testimonials" },
+        ];
+  const selectPanel = (key: string) => {
+    setActivePanel(key);
+  };
+  return (
+    <section className="site-builder-workspace">
+      <nav className="site-builder-nav" aria-label="Website editor sections">
+        <span>
+          {site.site_type === "brokerage"
+            ? "Brokerage website"
+            : "Agent website"}
+        </span>
+        {navItems.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={activePanel === item.key ? "active" : ""}
+            onClick={() => selectPanel(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <div className="site-builder-editor-column">
+        <section className="account-card site-builder-card">
+          <div className="card-heading">
+            <span>
+              {site.site_type === "brokerage"
+                ? "Broker's website"
+                : "Agent's website"}
+            </span>
+            <h2>{site.display_name}</h2>
+          </div>
+          <p>
+            Arrange sections, write your story, and choose a color system.
+            Changes are saved only when you confirm below.
+          </p>
+          <form
+            id={`site-builder-save-${site.id}`}
+            action={saveSiteBuilderAction}
+            className="stack-form"
+            data-prompt-title="Publish these website changes?"
+            data-prompt-message="Your professional website layout, palette, and public content will update for visitors."
+            data-prompt-confirm="Save website"
+          >
+            <input type="hidden" name="siteId" value={site.id} />
+            <input
+              type="hidden"
+              name="returnTab"
+              value={site.site_type === "brokerage" ? "broker" : "agent"}
+            />
+            <input
+              type="hidden"
+              name="sectionOrder"
+              value={JSON.stringify(order)}
+            />
+            <input
+              type="hidden"
+              name="content"
+              value={JSON.stringify({
+                aboutHeading,
+                aboutHtml,
+                contactEmail,
+                contactPhone,
+                strengths,
+              })}
+            />
+            {activePanel === "header" ? (
+              <label id="builder-header">
+                <span>Website headline</span>
+                <input
+                  name="headline"
+                  maxLength={240}
+                  value={headline}
+                  onChange={(event) => setHeadline(event.currentTarget.value)}
+                  placeholder="For example: Clear local guidance for Jamaica property decisions."
+                />
+                <small>
+                  This appears directly below your{" "}
+                  {site.site_type === "brokerage" ? "brokerage name" : "name"}{" "}
+                  on your public{" "}
+                  {site.site_type === "brokerage" ? "brokerage" : "agent"}{" "}
+                  website.
+                </small>
+              </label>
+            ) : null}
+            {activePanel === "color" ? (
+              <fieldset id="builder-color" className="theme-editor">
+                <legend>Your color palette</legend>
+                {themeFields
+                  .filter(
+                    ({ key }) =>
+                      site.site_type === "brokerage" || key !== "primary",
+                  )
+                  .map(({ key, label, help }) => (
+                    <label key={key}>
+                      <span>{label}</span>
+                      <input
+                        type="color"
+                        name={`theme-${key}`}
+                        value={siteTheme[key]}
+                        onChange={(event) =>
+                          setSiteTheme((current) => ({
+                            ...current,
+                            [key]: event.target.value,
+                          }))
+                        }
+                      />
+                      <small>{help}</small>
+                    </label>
+                  ))}
+                <input
+                  type="hidden"
+                  name="theme"
+                  value={JSON.stringify(siteTheme)}
+                  readOnly
+                />
+              </fieldset>
+            ) : null}
+            {activePanel === "about" ? (
+              <>
+                <label id="builder-about">
+                  <span>About section headline</span>
+                  <input
+                    maxLength={160}
+                    value={aboutHeading}
+                    onChange={(event) =>
+                      setAboutHeading(event.currentTarget.value)
+                    }
+                    placeholder={
+                      site.site_type === "brokerage"
+                        ? "For example: A brokerage portfolio in one clear place."
+                        : "For example: Service built around your property goals."
+                    }
+                  />
+                  <small>
+                    This appears as the heading at the start of your About
+                    section.
+                  </small>
+                </label>
+                <label>
+                  <span>About your service</span>
+                  <div className="rich-toolbar" aria-label="Text formatting">
+                    <button type="button" onClick={() => format("bold")}>
+                      Bold
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => format("insertUnorderedList")}
+                    >
+                      Bullets
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleFormat("heading")}
+                    >
+                      Heading
+                    </button>
+                    <button type="button" onClick={() => toggleFormat("serif")}>
+                      Serif
+                    </button>
+                    <button type="button" onClick={() => toggleFormat("large")}>
+                      Large
+                    </button>
+                    <button type="button" onClick={() => toggleFormat("teal")}>
+                      Teal
+                    </button>
+                  </div>
+                  <div
+                    ref={editor}
+                    className="rich-editor"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onInput={(event) =>
+                      setAboutHtml(event.currentTarget.innerHTML)
+                    }
+                  >
+                    {site.content?.aboutHtml
+                      ? undefined
+                      : "Share your local knowledge, process, and the people you serve."}
+                  </div>
+                </label>
+                <label>
+                  <span>Public contact email</span>
+                  <input
+                    type="email"
+                    value={contactEmail}
+                    onChange={(event) =>
+                      setContactEmail(event.currentTarget.value)
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Public phone</span>
+                  <input
+                    maxLength={40}
+                    value={contactPhone}
+                    onChange={(event) =>
+                      setContactPhone(event.currentTarget.value)
+                    }
+                  />
+                </label>
+                <label>
+                  <span>Career strengths</span>
+                  <input
+                    maxLength={800}
+                    value={strengths}
+                    onChange={(event) =>
+                      setStrengths(event.currentTarget.value)
+                    }
+                  />
+                </label>
+              </>
+            ) : null}
+          </form>
+          {site.site_type === "agent" && activePanel === "banner" ? (
+            <section
+              id="builder-banner"
+              className="site-asset-section agent-hero-background-upload"
+            >
+              <div className="card-heading">
+                <span>Agent website banner</span>
+                <h2>Ocean-view background</h2>
+              </div>
+              <p>
+                The included Jamaica ocean view is the default. To use your own,
+                upload a wide JPEG, PNG, or WebP image at{" "}
+                <strong>2400 × 800 pixels</strong> (3:1). Files must be at least
+                1500 × 500 pixels and under 5 MB.
+              </p>
+              {assetFor("hero_background") &&
+              !unavailableAssetIds.includes(assetFor("hero_background")!.id) ? (
+                <div className="site-asset-preview banner-preview">
+                  <img
+                    src={`/media/sites/${assetFor("hero_background")!.id}/display.webp`}
+                    alt="Current agent website background"
+                    onError={() =>
+                      setUnavailableAssetIds((current) => [
+                        ...new Set([
+                          ...current,
+                          assetFor("hero_background")!.id,
+                        ]),
+                      ])
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="site-asset-preview banner-preview default-banner-preview">
+                  <span>
+                    {assetFor("hero_background")
+                      ? "No image uploaded yet"
+                      : "Default ocean-view banner in use"}
+                  </span>
+                </div>
+              )}
+              <form
+                action={uploadSiteAssetAction}
+                className="stack-form site-asset-upload"
+                data-prompt-title="Save this agent website background?"
+                data-prompt-message="It will be compressed to WebP, stripped of metadata, and replace the default ocean-view banner on your agent website."
+                data-prompt-confirm="Save background image"
+              >
+                <input type="hidden" name="siteId" value={site.id} />
+                <input type="hidden" name="placement" value="hero_background" />
+                <label className="site-file-picker">
+                  <span>Background image</span>
+                  <input
+                    className="site-file-input"
+                    name="asset"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) =>
+                      void compressTestimonial(event, setHeroFileName)
+                    }
+                    required
+                  />
+                  <span className="site-file-picker-row">
+                    <span className="site-file-picker-button">Choose file</span>
+                    <span className="site-file-name">
+                      {heroFileName || "No file chosen"}
+                    </span>
+                  </span>
+                </label>
+                <ImageUploadButton />
+              </form>
+            </section>
+          ) : null}
+          {activePanel === "listings" ? <section id="builder-listings" className="builder-listing-panel">
+            <div className="card-heading">
+              <span>Brokerage inventory</span>
+              <h2>Listings</h2>
+            </div>
+            <p>
+              Review the listings visible to you. Select a record to edit it,
+              review its approval state, or manage its images.
+            </p>
+            <div className="builder-listing-records">
+              {listings.length ? (
+                listings.map((listing) => {
+                  const version = [...(listing.listing_versions ?? [])].sort(
+                    (a, b) => b.version_number - a.version_number,
+                  )[0];
+                  return (
+                    <article key={listing.id}>
+                      <div className="listing-record-status">
+                        <span>
+                          {listing.lifecycle_state.replaceAll("_", " ")}
+                        </span>
+                        <small>
+                          {version?.revision_state.replaceAll("_", " ") ??
+                            "No version"}
+                        </small>
+                      </div>
+                      <div>
+                        <h3>{version?.title ?? "Untitled listing"}</h3>
+                        <p>
+                          {version
+                            ? `${version.purpose === "sale" ? "For sale" : "Long-term rental"} · ${new Intl.NumberFormat("en-JM", { style: "currency", currency: version.currency, maximumFractionDigits: 0 }).format(version.price)}`
+                            : "Listing details unavailable"}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/workspace/listings/${listing.id}`}
+                        className="outline-dark-button"
+                      >
+                        Open listing
+                      </Link>
+                    </article>
+                  );
+                })
+              ) : (
+                <div className="builder-listing-empty">
+                  No listings are available yet. Create a private draft below to
+                  begin.
+                </div>
+              )}
+            </div>
+          </section> : null}
+          {canCreateListings && activePanel === "create" ? (
+            <section
+              id="builder-create"
+              className="builder-listing-panel builder-create-panel"
+            >
+              <div className="card-heading">
+                <span>New brokerage record</span>
+                <h2>Create listing</h2>
+              </div>
+              <p>
+                Save the property as a private draft. You can edit it and add
+                images before submitting it for brokerage approval.
+              </p>
+              <CreateListingForm
+                parishes={parishes}
+                returnTo="/workspace/site"
+              />
+            </section>
+          ) : null}
+          {site.site_type === "agent" && activePanel === "testimonials" ? (
+            <section id="builder-testimonials" className="testimonial-builder">
+              <div className="card-heading">
+                <span>Client stories</span>
+                <h2>Testimonials</h2>
+              </div>
+              <p>
+                Add up to ten client testimonials. Each one rotates on your
+                public agent website.
+              </p>
+              <form
+                action={createSiteTestimonialAction}
+                className="stack-form testimonial-form"
+                data-prompt-title="Add this testimonial?"
+                data-prompt-message="This client story will appear publicly on your professional website after it is saved."
+                data-prompt-confirm="Add testimonial"
+              >
+                <input type="hidden" name="siteId" value={site.id} />
+                <label className="full">
+                  <span>Client name</span>
+                  <input name="authorName" required maxLength={120} />
+                </label>
+                <label className="full">
+                  <span>Testimonial</span>
+                  <textarea
+                    name="quote"
+                    required
+                    minLength={10}
+                    maxLength={1200}
+                    rows={4}
+                    placeholder="Write the client’s testimonial exactly as approved for public display."
+                  />
+                </label>
+                <label className="site-file-picker full">
+                  <span>Optional client photo</span>
+                  <input
+                    className="site-file-input"
+                    name="testimonialAsset"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) =>
+                      void compressTestimonial(event, setTestimonialFileName)
+                    }
+                  />
+                  <span className="site-file-picker-row">
+                    <span className="site-file-picker-button">Choose file</span>
+                    <span className="site-file-name">
+                      {testimonialFileName || "No file chosen"}
+                    </span>
+                  </span>
+                </label>
+                <AddTestimonialButton />
+              </form>
+              {testimonials.length ? (
+                <div className="testimonial-records">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Client name</th>
+                        <th>Date</th>
+                        <th>Image</th>
+                        <th>
+                          <span className="sr-only">Edit</span>
+                        </th>
+                        <th>
+                          <span className="sr-only">Delete</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {testimonials.map((testimonial) => (
+                        <tr key={testimonial.id}>
+                          <td>{testimonial.author_name}</td>
+                          <td>
+                            {new Intl.DateTimeFormat("en-JM", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }).format(new Date(testimonial.created_at))}
+                          </td>
+                          <td>
+                            <span
+                              className={`image-status ${testimonial.asset_id ? "has-image" : "no-image"}`}
+                              title={
+                                testimonial.asset_id
+                                  ? "Image uploaded"
+                                  : "No image uploaded"
+                              }
+                              aria-label={
+                                testimonial.asset_id
+                                  ? "Image uploaded"
+                                  : "No image uploaded"
+                              }
+                            >
+                              {testimonial.asset_id ? "✓" : "×"}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className="icon-action"
+                              type="button"
+                              aria-label={`Edit testimonial from ${testimonial.author_name}`}
+                              title="Edit testimonial"
+                              onClick={() => {
+                                setEditingTestimonial(testimonial);
+                                setEditTestimonialFileName("");
+                              }}
+                            >
+                              ✎
+                            </button>
+                          </td>
+                          <td>
+                            <form
+                              action={removeSiteTestimonialAction}
+                              data-prompt-title="Remove this testimonial?"
+                              data-prompt-message="It will no longer appear on the public website."
+                              data-prompt-confirm="Delete testimonial"
+                              data-prompt-variant="danger"
+                            >
+                              <input
+                                type="hidden"
+                                name="siteId"
+                                value={site.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="testimonialId"
+                                value={testimonial.id}
+                              />
+                              <button
+                                className="icon-action delete"
+                                type="submit"
+                                aria-label={`Delete testimonial from ${testimonial.author_name}`}
+                                title="Delete testimonial"
+                              >
+                                ⌫
+                              </button>
+                            </form>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+          {site.site_type === "brokerage" && activePanel === "logo" ? <section
+            id="builder-logo"
+            className="site-asset-section"
+          >
+            <div className="card-heading">
+              <span>Professional presence</span>
+              <h2>
+                Brokerage logo
+              </h2>
+            </div>
+            <p>
+              Choose the image visitors see on your public{" "}
+              brokerage website.
+            </p>
+            {assetFor(
+              "brokerage_logo",
+            ) &&
+            !unavailableAssetIds.includes(
+              assetFor(
+                "brokerage_logo",
+              )!.id,
+            ) ? (
+              <div className="site-asset-preview">
+                <img
+                  src={`/media/sites/${assetFor(site.site_type === "brokerage" ? "brokerage_logo" : "profile_photo")!.id}/display.webp`}
+                  alt="Current brokerage logo"
+                  onError={() =>
+                    setUnavailableAssetIds((current) => [
+                      ...new Set([
+                        ...current,
+                        assetFor(
+                          "brokerage_logo",
+                        )!.id,
+                      ]),
+                    ])
+                  }
+                />
+              </div>
+            ) : (
+              <div className="site-asset-preview empty">
+                <span>No image uploaded yet</span>
+              </div>
+            )}
+            <form
+              action={uploadSiteAssetAction}
+              className="stack-form site-asset-upload"
+              data-prompt-title="Save this website image?"
+              data-prompt-message="It will be compressed to WebP, stripped of metadata, stored privately, and displayed only through SteadFast."
+              data-prompt-confirm="Save image"
+            >
+              <input type="hidden" name="siteId" value={site.id} />
+              <input
+                type="hidden"
+                name="placement"
+                value={
+                  "brokerage_logo"
+                }
+              />
+              <label className="site-file-picker">
+                <span>Choose image</span>
+                <input
+                  className="site-file-input"
+                  name="asset"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={compress}
+                  required
+                />
+                <span className="site-file-picker-row">
+                  <span className="site-file-picker-button">Choose file</span>
+                  <span className="site-file-name">
+                    {selectedFileName || "No file chosen"}
+                  </span>
+                </span>
+              </label>
+              {imageError ? (
+                <p className="form-error" role="alert">
+                  {imageError}
+                </p>
+              ) : null}
+              <ImageUploadButton />
+            </form>
+          </section> : null}
+          {["header", "color", "about"].includes(activePanel) ? <button
+            className="solid-button site-builder-save"
+            form={`site-builder-save-${site.id}`}
+            type="submit"
+          >
+            Save website
+          </button> : null}
+          {editingTestimonial ? (
+            <div
+              className="testimonial-modal-backdrop"
+              role="presentation"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget)
+                  setEditingTestimonial(null);
+              }}
+            >
+              <section
+                className="testimonial-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="edit-testimonial-title"
+              >
+                <div className="card-heading">
+                  <span>Client story</span>
+                  <h2 id="edit-testimonial-title">Edit testimonial</h2>
+                </div>
+                <form
+                  action={updateSiteTestimonialAction}
+                  className="stack-form testimonial-form"
+                  data-prompt-title="Save testimonial changes?"
+                  data-prompt-message="The revised client story will update on the public website."
+                  data-prompt-confirm="Save changes"
+                >
+                  <input type="hidden" name="siteId" value={site.id} />
+                  <input
+                    type="hidden"
+                    name="testimonialId"
+                    value={editingTestimonial.id}
+                  />
+                  <label className="full">
+                    <span>Client name</span>
+                    <input
+                      name="authorName"
+                      required
+                      maxLength={120}
+                      defaultValue={editingTestimonial.author_name}
+                    />
+                  </label>
+                  <label className="full">
+                    <span>Testimonial</span>
+                    <textarea
+                      name="quote"
+                      required
+                      minLength={10}
+                      maxLength={1200}
+                      rows={4}
+                      defaultValue={editingTestimonial.quote}
+                    />
+                  </label>
+                  <label className="site-file-picker full">
+                    <span>Replace client photo (optional)</span>
+                    <input
+                      className="site-file-input"
+                      name="testimonialAsset"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(event) =>
+                        void compressTestimonial(
+                          event,
+                          setEditTestimonialFileName,
+                        )
+                      }
+                    />
+                    <span className="site-file-picker-row">
+                      <span className="site-file-picker-button">
+                        Choose file
+                      </span>
+                      <span className="site-file-name">
+                        {editTestimonialFileName ||
+                          (editingTestimonial.asset_id
+                            ? "Current image kept"
+                            : "No file chosen")}
+                      </span>
+                    </span>
+                  </label>
+                  <div className="testimonial-modal-actions full">
+                    <button
+                      className="outline-dark-button"
+                      type="button"
+                      onClick={() => setEditingTestimonial(null)}
+                    >
+                      Cancel
+                    </button>
+                    <button className="solid-button" type="submit">
+                      Save
+                    </button>
+                  </div>
+                </form>
+              </section>
+            </div>
+          ) : null}
+        </section>
+      </div>
+      <aside className="site-builder-preview">
+        <div>
+          <span>Live website preview</span>
+          <a href={`/sites/${site.slug}`} target="_blank" rel="noreferrer">
+            Open site
+          </a>
+        </div>
+        <iframe
+          title={`${site.display_name} website preview`}
+          src={`/sites/${site.slug}`}
+        />
+      </aside>
     </section>
-    {canCreateListings ? <section id="builder-create" className="builder-listing-panel builder-create-panel"><div className="card-heading"><span>New brokerage record</span><h2>Create listing</h2></div><p>Save the property as a private draft. You can edit it and add images before submitting it for brokerage approval.</p><CreateListingForm parishes={parishes} returnTo="/workspace/site" /></section> : null}
-    {site.site_type === "agent" ? <section id="builder-testimonials" className="testimonial-builder">
-      <div className="card-heading"><span>Client stories</span><h2>Testimonials</h2></div>
-      <p>Add up to ten client testimonials. Each one rotates on your public agent website.</p>
-      <form action={createSiteTestimonialAction} className="stack-form testimonial-form" data-prompt-title="Add this testimonial?" data-prompt-message="This client story will appear publicly on your professional website after it is saved." data-prompt-confirm="Add testimonial">
-        <input type="hidden" name="siteId" value={site.id} />
-        <label className="full"><span>Client name</span><input name="authorName" required maxLength={120} /></label>
-        <label className="full"><span>Testimonial</span><textarea name="quote" required minLength={10} maxLength={1200} rows={4} placeholder="Write the client’s testimonial exactly as approved for public display." /></label>
-        <label className="site-file-picker full"><span>Optional client photo</span><input className="site-file-input" name="testimonialAsset" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void compressTestimonial(event, setTestimonialFileName)} /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{testimonialFileName || "No file chosen"}</span></span></label>
-        <AddTestimonialButton />
-      </form>
-      {testimonials.length ? <div className="testimonial-records"><table><thead><tr><th>Client name</th><th>Date</th><th>Image</th><th><span className="sr-only">Edit</span></th><th><span className="sr-only">Delete</span></th></tr></thead><tbody>{testimonials.map((testimonial) => <tr key={testimonial.id}><td>{testimonial.author_name}</td><td>{new Intl.DateTimeFormat("en-JM", { day: "numeric", month: "short", year: "numeric" }).format(new Date(testimonial.created_at))}</td><td><span className={`image-status ${testimonial.asset_id ? "has-image" : "no-image"}`} title={testimonial.asset_id ? "Image uploaded" : "No image uploaded"} aria-label={testimonial.asset_id ? "Image uploaded" : "No image uploaded"}>{testimonial.asset_id ? "✓" : "×"}</span></td><td><button className="icon-action" type="button" aria-label={`Edit testimonial from ${testimonial.author_name}`} title="Edit testimonial" onClick={() => { setEditingTestimonial(testimonial); setEditTestimonialFileName(""); }}>✎</button></td><td><form action={removeSiteTestimonialAction} data-prompt-title="Remove this testimonial?" data-prompt-message="It will no longer appear on the public website." data-prompt-confirm="Delete testimonial" data-prompt-variant="danger"><input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="testimonialId" value={testimonial.id} /><button className="icon-action delete" type="submit" aria-label={`Delete testimonial from ${testimonial.author_name}`} title="Delete testimonial">⌫</button></form></td></tr>)}</tbody></table></div> : null}
-    </section> : null}
-    <section id="builder-logo" className={`site-asset-section ${site.site_type === "agent" ? "agent-photo-legacy" : ""}`}>
-      <div className="card-heading"><span>Professional presence</span><h2>{site.site_type === "brokerage" ? "Brokerage logo" : "Professional photo"}</h2></div>
-      <p>Choose the image visitors see on your public {site.site_type === "brokerage" ? "brokerage" : "agent"} website.</p>
-      {assetFor(site.site_type === "brokerage" ? "brokerage_logo" : "profile_photo") && !unavailableAssetIds.includes(assetFor(site.site_type === "brokerage" ? "brokerage_logo" : "profile_photo")!.id) ? <div className="site-asset-preview"><img src={`/media/sites/${assetFor(site.site_type === "brokerage" ? "brokerage_logo" : "profile_photo")!.id}/display.webp`} alt={`Current ${site.site_type === "brokerage" ? "brokerage logo" : "professional photo"}`} onError={() => setUnavailableAssetIds((current) => [...new Set([...current, assetFor(site.site_type === "brokerage" ? "brokerage_logo" : "profile_photo")!.id])])} /></div> : <div className="site-asset-preview empty"><span>No image uploaded yet</span></div>}
-      <form action={uploadSiteAssetAction} className="stack-form site-asset-upload" data-prompt-title="Save this website image?" data-prompt-message="It will be compressed to WebP, stripped of metadata, stored privately, and displayed only through SteadFast." data-prompt-confirm="Save image">
-        <input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="placement" value={site.site_type === "brokerage" ? "brokerage_logo" : "profile_photo"} />
-        <label className="site-file-picker"><span>Choose image</span><input className="site-file-input" name="asset" type="file" accept="image/jpeg,image/png,image/webp" onChange={compress} required /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{selectedFileName || "No file chosen"}</span></span></label>{imageError ? <p className="form-error" role="alert">{imageError}</p> : null}<ImageUploadButton />
-      </form>
-    </section>
-    {site.site_type === "agent" ? <section className="site-asset-section profile-photo-moved"><div className="card-heading"><span>Professional presence</span><h2>Professional photo</h2></div><p>Your professional photo is now managed from your personal profile and appears automatically on your agent website.</p><Link className="outline-dark-button" href="/account/profile">Manage my profile photo</Link></section> : null}
-    <button className="solid-button site-builder-save" form={`site-builder-save-${site.id}`} type="submit">Save website</button>
-    {editingTestimonial ? <div className="testimonial-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setEditingTestimonial(null); }}><section className="testimonial-modal" role="dialog" aria-modal="true" aria-labelledby="edit-testimonial-title"><div className="card-heading"><span>Client story</span><h2 id="edit-testimonial-title">Edit testimonial</h2></div><form action={updateSiteTestimonialAction} className="stack-form testimonial-form" data-prompt-title="Save testimonial changes?" data-prompt-message="The revised client story will update on the public website." data-prompt-confirm="Save changes"><input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="testimonialId" value={editingTestimonial.id} /><label className="full"><span>Client name</span><input name="authorName" required maxLength={120} defaultValue={editingTestimonial.author_name} /></label><label className="full"><span>Testimonial</span><textarea name="quote" required minLength={10} maxLength={1200} rows={4} defaultValue={editingTestimonial.quote} /></label><label className="site-file-picker full"><span>Replace client photo (optional)</span><input className="site-file-input" name="testimonialAsset" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void compressTestimonial(event, setEditTestimonialFileName)} /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{editTestimonialFileName || (editingTestimonial.asset_id ? "Current image kept" : "No file chosen")}</span></span></label><div className="testimonial-modal-actions full"><button className="outline-dark-button" type="button" onClick={() => setEditingTestimonial(null)}>Cancel</button><button className="solid-button" type="submit">Save</button></div></form></section></div> : null}
-    </section></div>
-    <aside className="site-builder-preview"><div><span>Live website preview</span><a href={`/sites/${site.slug}`} target="_blank" rel="noreferrer">Open site</a></div><iframe title={`${site.display_name} website preview`} src={`/sites/${site.slug}`} /></aside>
-  </section>;
+  );
 }
