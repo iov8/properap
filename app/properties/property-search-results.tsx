@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import type { ListingCover, PropertySearchParams, PublicListing } from "@/lib/public-property-search";
+import { JamaicaListingMap } from "./jamaica-listing-map";
 
 const PRICE_OPTIONS = [0, 1_000_000, 5_000_000, 10_000_000, 25_000_000, 50_000_000, 100_000_000, 250_000_000, 500_000_000];
 const SIZE_OPTIONS = [500, 1_000, 1_500, 2_000, 3_000, 5_000, 10_000, 20_000];
@@ -42,12 +43,9 @@ export function PropertySearchResults({ initialListings, initialCovers, initialF
   const [cardsPerRow, setCardsPerRow] = useState<4 | 6>(initialCardsPerRow);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedMapListingIds, setSelectedMapListingIds] = useState<string[] | null>(null);
   const coverByListing = useMemo(() => new Map(covers.map((cover) => [cover.listing_id, cover])), [covers]);
-  const areaCounts = useMemo(() => Array.from(listings.reduce((areas, listing) => {
-    const area = listing.public_location_label ?? listing.administrative_area_name;
-    areas.set(area, (areas.get(area) ?? 0) + 1);
-    return areas;
-  }, new Map<string, number>())).sort((a, b) => b[1] - a[1]), [listings]);
+  const displayedListings = selectedMapListingIds ? listings.filter((listing) => selectedMapListingIds.includes(listing.listing_id)) : listings;
 
   async function updateResults(query: URLSearchParams) {
     setIsLoading(true);
@@ -58,6 +56,7 @@ export function PropertySearchResults({ initialListings, initialCovers, initialF
       const data = await response.json() as { listings: PublicListing[]; covers: ListingCover[] };
       setListings(data.listings);
       setCovers(data.covers);
+      setSelectedMapListingIds(null);
       window.history.replaceState(null, "", `/properties?${query.toString()}`);
     } catch {
       setError("We could not update the listings. Please try again.");
@@ -96,20 +95,16 @@ export function PropertySearchResults({ initialListings, initialCovers, initialF
       </form>
     </section>
 
-    <div className="marketplace-layout">
+    <div className="marketplace-layout map-results-layout">
+      <JamaicaListingMap listings={listings} selectedIds={selectedMapListingIds} onSelect={setSelectedMapListingIds} />
       <section className="marketplace-results" aria-label="Property results" aria-busy={isLoading}>
-        <div className="property-results-toolbar"><p><strong>{listings.length}</strong> properties</p><div aria-label="Cards per row" className="property-grid-switch"><span>View</span><button type="button" onClick={() => changeView(4)} aria-pressed={cardsPerRow === 4}>4</button><button type="button" onClick={() => changeView(6)} aria-pressed={cardsPerRow === 6}>6</button></div></div>
+        <div className="property-results-toolbar"><p><strong>{displayedListings.length}</strong> {selectedMapListingIds ? "homes in this map area" : "properties"}</p><div aria-label="Cards per row" className="property-grid-switch"><span>View</span><button type="button" onClick={() => changeView(4)} aria-pressed={cardsPerRow === 4}>4</button><button type="button" onClick={() => changeView(6)} aria-pressed={cardsPerRow === 6}>6</button></div></div>
         {error ? <p className="search-results-error" role="alert">{error}</p> : null}
-        {listings.length ? <div className={`property-card-grid cards-${cardsPerRow}`}>{listings.map((listing) => { const cover = coverByListing.get(listing.listing_id); const facts = [listing.bedrooms === null ? null : `${listing.bedrooms} bd`, listing.bathrooms === null ? null : `${listing.bathrooms} ba`, listing.building_area === null ? null : `${new Intl.NumberFormat("en-JM").format(listing.building_area)} sq ft`].filter(Boolean).join(" · "); return <article className="property-result-card" key={listing.listing_id}>
+        {displayedListings.length ? <div className={`property-card-grid cards-${cardsPerRow}`}>{displayedListings.map((listing) => { const cover = coverByListing.get(listing.listing_id); const facts = [listing.bedrooms === null ? null : `${listing.bedrooms} bd`, listing.bathrooms === null ? null : `${listing.bathrooms} ba`, listing.building_area === null ? null : `${new Intl.NumberFormat("en-JM").format(listing.building_area)} sq ft`].filter(Boolean).join(" · "); return <article className="property-result-card" key={listing.listing_id}>
           <Link className="property-card-visual" href={`/properties/${listing.listing_id}`} aria-label={`View ${listing.title}`}>{cover ? <Image src={`/media/listings/${cover.id}/card.webp`} alt={`${listing.title} property view`} width={cover.width} height={cover.height} sizes="(max-width: 680px) 100vw, (max-width: 1050px) 33vw, 17vw" unoptimized /> : <span className="property-card-placeholder">Photo preparing</span>}<span className="property-card-badge">{listing.purpose === "sale" ? "For sale" : "For rent"}</span></Link>
           <div className="property-card-copy"><strong className="property-card-price">{formatPrice(listing)}</strong><h2><Link href={`/properties/${listing.listing_id}`}>{listing.title}</Link></h2>{facts ? <p className="property-card-facts">{facts}</p> : null}<p className="property-card-location">{listing.public_location_label ?? listing.administrative_area_name}</p></div>
         </article>; })}</div> : <div className="listing-empty"><span>No matching inventory</span><h2>Try a broader search.</h2><p>Only active, brokerage-approved listings appear here. Change the location or property type to see other available properties.</p><button className="solid-button" type="button" onClick={() => { const form = document.querySelector<HTMLFormElement>(".marketplace-filters"); form?.reset(); if (form) void updateResults(queryFromForm(form, cardsPerRow)); }}>Clear filters</button></div>}
       </section>
-      <aside className="area-map-panel" aria-label="Listings grouped by area">
-        <div className="area-map-grid" aria-hidden="true" />
-        <span>Zoomed-out area view</span><h2>Jamaica by parish</h2><p>Results are grouped by approved public area. Exact map points will appear only when approved coordinates exist.</p>
-        <div className="area-clusters">{areaCounts.length ? areaCounts.map(([area, count]) => <button type="button" key={area} onClick={() => { const form = document.querySelector<HTMLFormElement>(".marketplace-filters"); if (form) { const select = form.elements.namedItem("location") as HTMLSelectElement; select.value = area; void updateResults(queryFromForm(form, cardsPerRow)); } }}><span>{area}</span><strong>{count}</strong></button>) : <small>No area groups match this search.</small>}</div>
-      </aside>
     </div>
   </>;
 }

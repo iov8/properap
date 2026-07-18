@@ -31,6 +31,8 @@ export type PublicListing = {
   land_area: number | null;
   administrative_area_name: string;
   public_location_label: string | null;
+  public_latitude: number | null;
+  public_longitude: number | null;
   brokerage_name: string;
   assigned_agent_name: string;
   ready_media_count: number;
@@ -80,7 +82,7 @@ export function parsePropertySearchParams(params: Record<string, string | string
 export async function searchPublicListings(supabase: SupabaseClient, filters: PropertySearchParams) {
   let query = supabase
     .from("public_listing_snapshots")
-    .select("listing_id,lifecycle_state,purpose,property_type,property_subtype,currency,price,price_period,title,description,bedrooms,bathrooms,building_area,land_area,administrative_area_name,public_location_label,brokerage_name,assigned_agent_name,ready_media_count")
+    .select("listing_id,lifecycle_state,purpose,property_type,property_subtype,currency,price,price_period,title,description,bedrooms,bathrooms,building_area,land_area,administrative_area_name,public_location_label,public_latitude,public_longitude,brokerage_name,assigned_agent_name,ready_media_count")
     .eq("purpose", filters.intent === "rent" ? "long_term_rent" : "sale")
     .order("published_at", { ascending: false })
     .limit(24);
