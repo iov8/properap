@@ -391,6 +391,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .agent-site-hero .site-profile-photo { background: #fff; border: 3px solid var(--site-accent, var(--gold)); border-radius: 50%; box-shadow: 0 16px 42px rgba(13, 31, 29, .20); height: clamp(210px, 19vw, 300px); margin: 0; object-fit: cover; padding: 0; width: clamp(210px, 19vw, 300px); }
 .agent-site-hero .professional-site-hero-copy { margin-top: 20px; max-width: 900px; }
 .agent-site-hero .brokerage-site-title { color: var(--site-text, var(--charcoal)); margin: 0; }
+.agent-hero-first-name { color: #7a5d14; }
 .agent-hero-last-name { color: var(--evergreen); }
 .agent-site-hero .professional-site-hero-copy p { color: var(--site-text, var(--charcoal)); font-family: Georgia, serif; margin: 12px auto 0; }
 .professional-site-hero > span, .professional-site-intro span { color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
