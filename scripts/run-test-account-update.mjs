@@ -31,7 +31,10 @@ const resolved = requestedAccounts.map((account) => {
     const values = [normal(candidate.display_name), normal(candidate.primary_email), normal(users.find((user) => user.id === candidate.auth_user_id)?.email)];
     return values.some(account.matches);
   });
-  if (!person?.auth_user_id) throw new Error(`Could not identify the existing ${account.label} test account.`);
+  if (!person?.auth_user_id) {
+    const available = people.filter((candidate) => candidate.auth_user_id).map((candidate) => `${candidate.display_name} <${candidate.primary_email ?? "no email"}>`).slice(0, 50).join(", ");
+    throw new Error(`Could not identify the existing ${account.label} test account. Available test identities: ${available}`);
+  }
   const user = users.find((candidate) => candidate.id === person.auth_user_id);
   if (!user) throw new Error(`The ${account.label} account has no matching Supabase Auth user.`);
   const conflicting = users.find((candidate) => normal(candidate.email) === account.email && candidate.id !== user.id);
