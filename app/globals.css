@@ -237,10 +237,10 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .site-section-order > span { color: #53635f; font-size: 11px; }
 .site-section-order > div { align-items: center; background: var(--ivory); border: 1px solid rgba(16,44,42,.1); cursor: grab; display: flex; justify-content: space-between; padding: 10px 12px; }
 .site-section-order button { background: transparent; border: 1px solid var(--sand); cursor: pointer; margin-left: 5px; min-height: 28px; min-width: 28px; }
-.theme-editor { border: 1px solid var(--sand); display: grid; gap: 10px; grid-template-columns: repeat(4, 1fr); padding: 14px; }
+.theme-editor { border: 1px solid var(--sand); display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); padding: 14px; }
 .theme-editor legend { font-size: 12px; font-weight: 700; grid-column: 1 / -1; }
-.theme-editor label { display: grid; font-size: 10px; gap: 5px; text-transform: capitalize; }
-.theme-editor input { height: 38px; padding: 2px; width: 100%; }
+.theme-editor label { display: grid; font-size: 10px; gap: 5px; min-width: 0; text-transform: capitalize; }
+.theme-editor input { height: 50px; padding: 4px; width: 72px; }
 .rich-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .rich-toolbar button { background: var(--sage); border: 0; color: var(--evergreen); cursor: pointer; font-size: 11px; padding: 7px 10px; }
 .rich-editor { background: #fff; border: 1px solid var(--sand); line-height: 1.6; min-height: 150px; padding: 14px; }
