@@ -62,8 +62,15 @@ const { data: existingBrokerRole, error: existingBrokerRoleError } = await supab
   .is("ends_at", null)
   .maybeSingle();
 if (existingBrokerRoleError) throw existingBrokerRoleError;
-if (existingBrokerRole && existingBrokerRole.brokerage_memberships.person_id !== john.person.id) {
-  throw new Error("Stamp Brokerage Inc. already has a different active broker; no role changes were made.");
+const existingBrokerMembership = Array.isArray(existingBrokerRole?.brokerage_memberships) ? existingBrokerRole.brokerage_memberships[0] : existingBrokerRole?.brokerage_memberships;
+if (existingBrokerRole && existingBrokerMembership?.person_id !== john.person.id) {
+  const { error } = await supabase
+    .from("membership_roles")
+    .update({ ends_at: new Date().toISOString() })
+    .eq("brokerage_id", brokerage.id)
+    .eq("role_key", "broker")
+    .is("ends_at", null);
+  if (error) throw error;
 }
 
 async function ensureMembership(personId) {
