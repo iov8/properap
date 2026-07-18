@@ -478,6 +478,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .account-hero.compact { padding-bottom: 70px; padding-top: 54px; }
 .account-hero h1 { color: var(--lime); font-family: Georgia, serif; font-size: clamp(48px, 6vw, 78px); font-weight: 400; letter-spacing: -.055em; margin: 24px 0 12px; }
 .account-hero p { color: rgba(255,255,255,.57); font-family: Georgia, serif; font-size: 17px; margin: 0; }
+.site-builder-hero { padding-bottom: 30px !important; padding-top: 24px !important; }.site-builder-hero h1 { font-size: 20px; letter-spacing: 0; margin: 13px 0 0; }
 .account-layout, .management-layout { display: grid; gap: 34px; grid-template-columns: minmax(0, 1fr) 320px; margin: -38px auto 0; max-width: 1250px; padding: 0 28px 90px; position: relative; }
 .management-layout { grid-template-columns: minmax(0, 1fr) 380px; }
 .account-main, .management-layout > div, .management-aside { display: flex; flex-direction: column; gap: 26px; }
