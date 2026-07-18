@@ -273,6 +273,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .professional-site-page { background: var(--site-background, var(--ivory)); color: var(--site-text, var(--charcoal)); min-height: 100vh; }
 .professional-site-page .professional-site-hero { background: var(--site-primary, var(--evergreen)); color: #fff; }
 .professional-site-page .professional-site-hero > span, .professional-site-page .professional-site-listings > .section-heading span, .professional-site-testimonials > span, .professional-site-search > span, .professional-site-contact > span { color: var(--site-accent, var(--gold)); }
+.professional-site-hero-copy > p { font-family: Georgia, serif; font-style: italic; }
 .site-profile-photo, .site-logo { border: 3px solid var(--site-accent, var(--gold)); display: block; height: 112px; margin: 0 0 22px; object-fit: cover; width: 112px; }
 .site-logo { background: #fff; height: clamp(200px, 21vw, 260px); max-width: 560px; object-fit: contain; padding: 12px; width: min(41vw, 560px); }
 .site-rich-content { line-height: 1.75; max-width: 680px; }
