@@ -24,6 +24,13 @@ function ImageUploadButton() {
   </button>;
 }
 
+function AddTestimonialButton() {
+  const { pending } = useFormStatus();
+  return <button className="solid-button full" type="submit" disabled={pending} aria-busy={pending}>
+    {pending ? <><span className="button-spinner" aria-hidden="true" />Adding testimonial…</> : "Add testimonial"}
+  </button>;
+}
+
 export function SiteBuilder({ site, testimonials }: { site: Site; testimonials: Testimonial[] }) {
   const savedOrder = Array.isArray(site.layout?.sectionOrder) ? site.layout.sectionOrder.filter((value): value is string => allSections.includes(String(value))) : allSections;
   const [order, setOrder] = useState(savedOrder.length === allSections.length ? savedOrder : allSections);
@@ -73,7 +80,7 @@ export function SiteBuilder({ site, testimonials }: { site: Site; testimonials: 
         <label className="full"><span>Client name</span><input name="authorName" required maxLength={120} /></label>
         <label className="full"><span>Testimonial</span><textarea name="quote" required minLength={10} maxLength={1200} rows={4} placeholder="Write the client’s testimonial exactly as approved for public display." /></label>
         <label className="site-file-picker full"><span>Optional client photo</span><input className="site-file-input" name="testimonialAsset" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void compressTestimonial(event, setTestimonialFileName)} /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{testimonialFileName || "No file chosen"}</span></span></label>
-        <button className="solid-button full" type="submit">Add testimonial</button>
+        <AddTestimonialButton />
       </form>
       {testimonials.length ? <div className="testimonial-records"><table><thead><tr><th>Client name</th><th>Date</th><th>Image</th><th><span className="sr-only">Edit</span></th><th><span className="sr-only">Delete</span></th></tr></thead><tbody>{testimonials.map((testimonial) => <tr key={testimonial.id}><td>{testimonial.author_name}</td><td>{new Intl.DateTimeFormat("en-JM", { day: "numeric", month: "short", year: "numeric" }).format(new Date(testimonial.created_at))}</td><td><span className={`image-status ${testimonial.asset_id ? "has-image" : "no-image"}`} title={testimonial.asset_id ? "Image uploaded" : "No image uploaded"} aria-label={testimonial.asset_id ? "Image uploaded" : "No image uploaded"}>{testimonial.asset_id ? "✓" : "×"}</span></td><td><button className="icon-action" type="button" aria-label={`Edit testimonial from ${testimonial.author_name}`} title="Edit testimonial" onClick={() => { setEditingTestimonial(testimonial); setEditTestimonialFileName(""); }}>✎</button></td><td><form action={removeSiteTestimonialAction} data-prompt-title="Remove this testimonial?" data-prompt-message="It will no longer appear on the public website." data-prompt-confirm="Delete testimonial" data-prompt-variant="danger"><input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="testimonialId" value={testimonial.id} /><button className="icon-action delete" type="submit" aria-label={`Delete testimonial from ${testimonial.author_name}`} title="Delete testimonial">⌫</button></form></td></tr>)}</tbody></table></div> : null}
     </section>
