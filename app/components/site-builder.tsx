@@ -9,7 +9,7 @@ const labels: Record<string, string> = { hero: "Hero", about: "About", search: "
 const allSections = ["hero", "about", "search", "listings", "testimonials", "contact"];
 type Site = { id: string; site_type: string; display_name: string; headline: string | null; slug: string; theme: Record<string, unknown> | null; layout: Record<string, unknown> | null; content: Record<string, unknown> | null };
 type SiteTheme = { primary: string; accent: string; background: string; text: string };
-type Testimonial = { id: string; author_name: string; author_context: string | null; quote: string; asset_id: string | null; position: number; created_at: string };
+type Testimonial = { id: string; site_id: string; author_name: string; author_context: string | null; quote: string; asset_id: string | null; position: number; created_at: string };
 type SiteAsset = { id: string; site_id: string; placement: string };
 const themeFields: { key: keyof SiteTheme; label: string; help: string }[] = [
   { key: "primary", label: "Hero background", help: "The large banner at the top of your public website." },
@@ -27,9 +27,26 @@ function ImageUploadButton() {
 
 function AddTestimonialButton() {
   const { pending } = useFormStatus();
-  return <button className="solid-button full" type="submit" disabled={pending} aria-busy={pending}>
-    {pending ? <><span className="button-spinner" aria-hidden="true" />Adding testimonial…</> : "Add testimonial"}
+  return <button className="testimonial-add-button full" type="submit" disabled={pending} aria-busy={pending}>
+    {pending ? <><span className="button-spinner" aria-hidden="true" />Adding testimonial…</> : "+ Add testimonial"}
   </button>;
+}
+
+export function SiteBuilderTabs({ sites, testimonials, assets }: { sites: Site[]; testimonials: Testimonial[]; assets: SiteAsset[] }) {
+  const orderedSites = [...sites].sort((first, second) => Number(first.site_type === "brokerage") - Number(second.site_type === "brokerage"));
+  const [activeSiteId, setActiveSiteId] = useState(orderedSites[0]?.id ?? "");
+  const activeSite = orderedSites.find((site) => site.id === activeSiteId) ?? orderedSites[0];
+
+  if (!activeSite) return null;
+
+  return <div className="site-builder-tabs">
+    {orderedSites.length > 1 ? <div className="site-builder-tab-list" role="tablist" aria-label="Website settings">
+      {orderedSites.map((site) => <button key={site.id} type="button" role="tab" aria-selected={site.id === activeSite.id} className={site.id === activeSite.id ? "active" : ""} onClick={() => setActiveSiteId(site.id)}>{site.site_type === "brokerage" ? "Broker" : "Agent"}</button>)}
+    </div> : null}
+    <div role="tabpanel" aria-label={`${activeSite.site_type === "brokerage" ? "Broker" : "Agent"} website settings`}>
+      <SiteBuilder site={activeSite} testimonials={testimonials.filter((testimonial) => testimonial.site_id === activeSite.id)} assets={assets.filter((asset) => asset.site_id === activeSite.id)} />
+    </div>
+  </div>;
 }
 
 export function SiteBuilder({ site, testimonials, assets }: { site: Site; testimonials: Testimonial[]; assets: SiteAsset[] }) {
