@@ -250,10 +250,11 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .site-asset-preview.banner-preview { height: 150px; padding: 0; }
 .site-asset-preview.banner-preview img { height: 100%; object-fit: cover; width: 100%; }
 .site-asset-preview.default-banner-preview { background-image: linear-gradient(rgba(8,30,34,.18), rgba(8,30,34,.26)), url('/jamaica-ocean-view-agent-hero.png'); background-position: center; background-size: cover; color: #fff; font-size: 13px; font-weight: 700; text-shadow: 0 1px 5px rgba(0,0,0,.55); }
-.theme-editor { border: 1px solid var(--sand); display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); padding: 14px; }
+.theme-editor { border: 1px solid var(--sand); display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)); padding: 18px; }
 .theme-editor legend { font-size: 12px; font-weight: 700; grid-column: 1 / -1; }
 .theme-editor label { display: grid; font-size: 10px; gap: 5px; min-width: 0; text-transform: capitalize; }
 .theme-editor input { height: 50px; padding: 4px; width: 72px; }
+.theme-editor small { color: #53635f; font-size: 13px; font-weight: 400; line-height: 1.4; text-transform: none; }
 .rich-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
 .rich-toolbar button { background: var(--sage); border: 0; color: var(--evergreen); cursor: pointer; font-size: 11px; padding: 7px 10px; }
 .rich-editor { background: #fff; border: 1px solid var(--sand); line-height: 1.6; min-height: 150px; padding: 14px; }
