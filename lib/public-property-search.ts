@@ -8,8 +8,7 @@ export type PropertySearchParams = {
   maxPrice: number | null;
   minimumBeds: number | null;
   minimumSize: number | null;
-  maximumSize: number | null;
-  intent: "buy" | "rent";
+  intent: "buy" | "rent" | "vacation";
   brokerageSlug: string;
   agentSlug: string;
 };
@@ -72,8 +71,7 @@ export function parsePropertySearchParams(params: Record<string, string | string
     maxPrice: maximumPrice(params.maxPrice),
     minimumBeds: wholeNumber(params.beds, 20),
     minimumSize: wholeNumber(params.minSize, 10_000_000),
-    maximumSize: wholeNumber(params.maxSize, 10_000_000),
-    intent: firstParameter(params.intent) === "rent" ? "rent" : "buy",
+    intent: firstParameter(params.intent) === "rent" ? "rent" : firstParameter(params.intent) === "vacation" ? "vacation" : "buy",
     brokerageSlug: safeSlug(params.brokerage),
     agentSlug: safeSlug(params.agent),
   };
@@ -83,7 +81,7 @@ export async function searchPublicListings(supabase: SupabaseClient, filters: Pr
   let query = supabase
     .from("public_listing_snapshots")
     .select("listing_id,lifecycle_state,purpose,property_type,property_subtype,currency,price,price_period,title,description,bedrooms,bathrooms,building_area,land_area,administrative_area_name,public_location_label,public_latitude,public_longitude,brokerage_name,assigned_agent_name,ready_media_count")
-    .eq("purpose", filters.intent === "rent" ? "long_term_rent" : "sale")
+    .eq("purpose", filters.intent === "rent" ? "long_term_rent" : filters.intent === "vacation" ? "short_term_rent" : "sale")
     .order("published_at", { ascending: false })
     .limit(24);
 
@@ -96,7 +94,6 @@ export async function searchPublicListings(supabase: SupabaseClient, filters: Pr
   if (filters.maxPrice !== null) query = query.lte("price", filters.maxPrice);
   if (filters.minimumBeds !== null) query = query.gte("bedrooms", filters.minimumBeds);
   if (filters.minimumSize !== null) query = query.gte("building_area", filters.minimumSize);
-  if (filters.maximumSize !== null) query = query.lte("building_area", filters.maximumSize);
   if (filters.brokerageSlug) query = query.eq("brokerage_slug", filters.brokerageSlug);
   if (filters.agentSlug) query = query.eq("assigned_agent_slug", filters.agentSlug);
 
