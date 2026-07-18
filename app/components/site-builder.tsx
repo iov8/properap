@@ -36,12 +36,18 @@ export function SiteBuilderTabs({ sites, testimonials, assets, initialTab }: { s
   const orderedSites = [...sites].sort((first, second) => Number(first.site_type === "brokerage") - Number(second.site_type === "brokerage"));
   const [activeSiteId, setActiveSiteId] = useState(orderedSites.find((site) => initialTab === "broker" ? site.site_type === "brokerage" : initialTab === "agent" && site.site_type === "agent")?.id ?? orderedSites[0]?.id ?? "");
   const activeSite = orderedSites.find((site) => site.id === activeSiteId) ?? orderedSites[0];
+  const selectSite = (site: Site) => {
+    setActiveSiteId(site.id);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", site.site_type === "brokerage" ? "broker" : "agent");
+    window.history.replaceState(null, "", url);
+  };
 
   if (!activeSite) return null;
 
   return <div className="site-builder-tabs">
     {orderedSites.length > 1 ? <div className="site-builder-tab-list" role="tablist" aria-label="Website settings">
-      {orderedSites.map((site) => <button key={site.id} type="button" role="tab" aria-selected={site.id === activeSite.id} className={site.id === activeSite.id ? "active" : ""} onClick={() => setActiveSiteId(site.id)}>{site.site_type === "brokerage" ? "Broker" : "Agent"}</button>)}
+      {orderedSites.map((site) => <button key={site.id} type="button" role="tab" aria-selected={site.id === activeSite.id} className={site.id === activeSite.id ? "active" : ""} onClick={() => selectSite(site)}>{site.site_type === "brokerage" ? "Broker" : "Agent"}</button>)}
     </div> : null}
     <div role="tabpanel" aria-label={`${activeSite.site_type === "brokerage" ? "Broker" : "Agent"} website settings`}>
       <SiteBuilder site={activeSite} testimonials={testimonials.filter((testimonial) => testimonial.site_id === activeSite.id)} assets={assets.filter((asset) => asset.site_id === activeSite.id)} />
