@@ -7,12 +7,13 @@ export function StatusMessage({ error, notice }: { error?: string; notice?: stri
   const [visible, setVisible] = useState(Boolean(message));
 
   useEffect(() => {
+    setVisible(Boolean(message));
     if (!message) return;
     const url = new URL(window.location.href);
     url.searchParams.delete(error ? "error" : "notice");
     window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
     if (error) return;
-    const timeout = window.setTimeout(() => setVisible(false), 5000);
+    const timeout = window.setTimeout(() => setVisible(false), 8000);
     return () => window.clearTimeout(timeout);
   }, [error, message]);
 
