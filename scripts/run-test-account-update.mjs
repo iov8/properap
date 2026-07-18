@@ -36,9 +36,10 @@ for (const account of requestedAccounts) {
     const available = people.filter((candidate) => candidate.auth_user_id).map((candidate) => `${candidate.display_name} <${candidate.primary_email ?? "no email"}>`).slice(0, 50).join(", ");
     throw new Error(`Could not identify the existing ${account.label} test account. Available test identities: ${available}`);
   }
-  let user = users.find((candidate) => candidate.id === person.auth_user_id || normal(candidate.email) === normal(person.primary_email));
-  const conflicting = users.find((candidate) => normal(candidate.email) === account.email && candidate.id !== user?.id);
-  if (conflicting) throw new Error(`${account.email} is already used by a different account.`);
+  const requestedUser = users.find((candidate) => normal(candidate.email) === account.email);
+  let user = users.find((candidate) => candidate.id === person.auth_user_id || normal(candidate.email) === normal(person.primary_email)) ?? requestedUser;
+  const linkedElsewhere = requestedUser && people.find((candidate) => candidate.auth_user_id === requestedUser.id && candidate.id !== person.id);
+  if (linkedElsewhere) throw new Error(`${account.email} is already linked to a different profile.`);
   if (!user) {
     const { data, error } = await supabase.auth.admin.createUser({ email: account.email, password, email_confirm: true });
     if (error || !data.user) throw error ?? new Error(`Could not create the ${account.label} sign-in.`);
