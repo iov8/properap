@@ -5,7 +5,7 @@ import { createListingDraftAction, type CreateListingDraftState } from "@/app/ac
 
 type Parish = { id: string; name: string };
 
-export function CreateListingForm({ parishes }: { parishes: Parish[] }) {
+export function CreateListingForm({ parishes, returnTo }: { parishes: Parish[]; returnTo?: string }) {
   const [purpose, setPurpose] = useState("sale");
   const [propertyType, setPropertyType] = useState("residential");
   const [state, formAction, pending] = useActionState<CreateListingDraftState, FormData>(createListingDraftAction, {});
@@ -13,7 +13,7 @@ export function CreateListingForm({ parishes }: { parishes: Parish[] }) {
 
   return (
     <form action={formAction} className="listing-wizard" data-prompt-title="Create this private draft?" data-prompt-message="SteadFast will save these details inside your brokerage workspace. You can continue editing before submitting it for approval." data-prompt-confirm="Create draft">
-      <section className="wizard-section">
+      {returnTo ? <input type="hidden" name="returnTo" value={returnTo} /> : null}<section className="wizard-section">
         <div className="wizard-step"><span>01</span><div><strong>What are you marketing?</strong><p>Start with the offer and property type.</p></div></div>
         <div className="wizard-fields two">
           <label><span>Listing purpose</span><select name="purpose" value={purpose} onChange={(event) => setPurpose(event.target.value)}><option value="sale">For sale</option><option value="long_term_rent">Long-term rental</option></select></label>

@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { createSiteTestimonialAction, removeSiteTestimonialAction, saveSiteBuilderAction, updateSiteTestimonialAction, uploadSiteAssetAction } from "@/app/actions/site-builder";
 import { compressListingImage } from "@/lib/media/client-image-compression";
+import { CreateListingForm } from "@/app/components/create-listing-form";
 
 const labels: Record<string, string> = { hero: "Hero", about: "About", team: "Brokerage team", search: "Property search", listings: "Listings", testimonials: "Testimonials", contact: "Contact" };
 const allSections = ["hero", "about", "team", "search", "listings", "testimonials", "contact"];
@@ -12,6 +13,9 @@ type Site = { id: string; site_type: string; display_name: string; headline: str
 type SiteTheme = { primary: string; accent: string; background: string; text: string };
 type Testimonial = { id: string; site_id: string; author_name: string; author_context: string | null; quote: string; asset_id: string | null; position: number; created_at: string };
 type SiteAsset = { id: string; site_id: string; placement: string };
+type ListingVersion = { version_number: number; title: string; purpose: string; price: number; currency: string; revision_state: string };
+type Listing = { id: string; lifecycle_state: string; updated_at: string; listing_versions: ListingVersion[] | null };
+type Parish = { id: string; name: string };
 const themeFields: { key: keyof SiteTheme; label: string; help: string }[] = [
   { key: "primary", label: "Hero background", help: "The large banner behind your brokerage name." },
   { key: "accent", label: "Accent color", help: "Buttons, highlights, and small premium details." },
@@ -33,7 +37,7 @@ function AddTestimonialButton() {
   </button>;
 }
 
-export function SiteBuilderTabs({ sites, testimonials, assets, initialTab }: { sites: Site[]; testimonials: Testimonial[]; assets: SiteAsset[]; initialTab?: string }) {
+export function SiteBuilderTabs({ sites, testimonials, assets, listings, parishes, canCreateListings, initialTab }: { sites: Site[]; testimonials: Testimonial[]; assets: SiteAsset[]; listings: Listing[]; parishes: Parish[]; canCreateListings: boolean; initialTab?: string }) {
   const orderedSites = [...sites].sort((first, second) => Number(first.site_type === "brokerage") - Number(second.site_type === "brokerage"));
   const [activeSiteId, setActiveSiteId] = useState(orderedSites.find((site) => initialTab === "broker" ? site.site_type === "brokerage" : initialTab === "agent" && site.site_type === "agent")?.id ?? orderedSites[0]?.id ?? "");
   const activeSite = orderedSites.find((site) => site.id === activeSiteId) ?? orderedSites[0];
@@ -51,12 +55,12 @@ export function SiteBuilderTabs({ sites, testimonials, assets, initialTab }: { s
       {orderedSites.map((site) => <button key={site.id} type="button" role="tab" aria-selected={site.id === activeSite.id} className={site.id === activeSite.id ? "active" : ""} onClick={() => selectSite(site)}>{site.site_type === "brokerage" ? "Broker" : "Agent"}</button>)}
     </div> : null}
     <div role="tabpanel" aria-label={`${activeSite.site_type === "brokerage" ? "Broker" : "Agent"} website settings`}>
-      <SiteBuilder site={activeSite} testimonials={testimonials.filter((testimonial) => testimonial.site_id === activeSite.id)} assets={assets.filter((asset) => asset.site_id === activeSite.id)} />
+      <SiteBuilder site={activeSite} testimonials={testimonials.filter((testimonial) => testimonial.site_id === activeSite.id)} assets={assets.filter((asset) => asset.site_id === activeSite.id)} listings={listings} parishes={parishes} canCreateListings={canCreateListings} />
     </div>
   </div>;
 }
 
-export function SiteBuilder({ site, testimonials, assets }: { site: Site; testimonials: Testimonial[]; assets: SiteAsset[] }) {
+export function SiteBuilder({ site, testimonials, assets, listings, parishes, canCreateListings }: { site: Site; testimonials: Testimonial[]; assets: SiteAsset[]; listings: Listing[]; parishes: Parish[]; canCreateListings: boolean }) {
   const availableSections = site.site_type === "brokerage" ? allSections.filter((section) => section !== "testimonials") : allSections.filter((section) => section !== "team");
   const savedOrder = Array.isArray(site.layout?.sectionOrder) ? site.layout.sectionOrder.filter((value): value is string => availableSections.includes(String(value))) : availableSections;
   const [order, setOrder] = useState(savedOrder.length === availableSections.length ? savedOrder : availableSections);
@@ -96,8 +100,9 @@ export function SiteBuilder({ site, testimonials, assets }: { site: Site; testim
   const navItems = site.site_type === "brokerage"
     ? [{ key: "logo", label: "Brokerage logo" }, { key: "header", label: "Header text" }, { key: "color", label: "Color" }, { key: "about", label: "About" }, { key: "listings", label: "Listings" }, { key: "create", label: "Create listing" }]
     : [{ key: "banner", label: "Banner" }, { key: "header", label: "Header text" }, { key: "color", label: "Color" }, { key: "about", label: "About" }, { key: "listings", label: "Listings" }, { key: "create", label: "Create listing" }, { key: "testimonials", label: "Testimonials" }];
+  const selectPanel = (key: string) => { setActivePanel(key); document.getElementById(`builder-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); };
   return <section className="site-builder-workspace">
-    <nav className="site-builder-nav" aria-label="Website editor sections"><span>{site.site_type === "brokerage" ? "Brokerage website" : "Agent website"}</span>{navItems.map((item) => item.key === "listings" || item.key === "create" ? <Link key={item.key} href={item.key === "listings" ? "/workspace/listings" : "/workspace/listings/new"} className={activePanel === item.key ? "active" : ""} onClick={() => setActivePanel(item.key)}>{item.label}<small>Open</small></Link> : <button key={item.key} type="button" className={activePanel === item.key ? "active" : ""} onClick={() => { setActivePanel(item.key); document.getElementById(`builder-${item.key}`)?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>{item.label}</button>)}</nav>
+    <nav className="site-builder-nav" aria-label="Website editor sections"><span>{site.site_type === "brokerage" ? "Brokerage website" : "Agent website"}</span>{navItems.map((item) => <button key={item.key} type="button" className={activePanel === item.key ? "active" : ""} onClick={() => selectPanel(item.key)}>{item.label}</button>)}</nav>
     <div className="site-builder-editor-column"><section className="account-card site-builder-card">
     <div className="card-heading"><span>{site.site_type === "brokerage" ? "Broker's website" : "Agent's website"}</span><h2>{site.display_name}</h2></div>
     <p>Arrange sections, write your story, and choose a color system. Changes are saved only when you confirm below.</p>
@@ -111,6 +116,12 @@ export function SiteBuilder({ site, testimonials, assets }: { site: Site; testim
       <label><span>Public phone</span><input maxLength={40} value={contactPhone} onChange={(event) => setContactPhone(event.currentTarget.value)} /></label><label><span>Career strengths</span><input maxLength={800} value={strengths} onChange={(event) => setStrengths(event.currentTarget.value)} /></label>
     </form>
     {site.site_type === "agent" ? <section id="builder-banner" className="site-asset-section agent-hero-background-upload"><div className="card-heading"><span>Agent website banner</span><h2>Ocean-view background</h2></div><p>The included Jamaica ocean view is the default. To use your own, upload a wide JPEG, PNG, or WebP image at <strong>2400 × 800 pixels</strong> (3:1). Files must be at least 1500 × 500 pixels and under 5 MB.</p>{assetFor("hero_background") && !unavailableAssetIds.includes(assetFor("hero_background")!.id) ? <div className="site-asset-preview banner-preview"><img src={`/media/sites/${assetFor("hero_background")!.id}/display.webp`} alt="Current agent website background" onError={() => setUnavailableAssetIds((current) => [...new Set([...current, assetFor("hero_background")!.id])])} /></div> : <div className="site-asset-preview banner-preview default-banner-preview"><span>{assetFor("hero_background") ? "No image uploaded yet" : "Default ocean-view banner in use"}</span></div>}<form action={uploadSiteAssetAction} className="stack-form site-asset-upload" data-prompt-title="Save this agent website background?" data-prompt-message="It will be compressed to WebP, stripped of metadata, and replace the default ocean-view banner on your agent website." data-prompt-confirm="Save background image"><input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="placement" value="hero_background" /><label className="site-file-picker"><span>Background image</span><input className="site-file-input" name="asset" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void compressTestimonial(event, setHeroFileName)} required /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{heroFileName || "No file chosen"}</span></span></label><ImageUploadButton /></form></section> : null}
+    <section id="builder-listings" className="builder-listing-panel">
+      <div className="card-heading"><span>Brokerage inventory</span><h2>Listings</h2></div>
+      <p>Review the listings visible to you. Select a record to edit it, review its approval state, or manage its images.</p>
+      <div className="builder-listing-records">{listings.length ? listings.map((listing) => { const version = [...(listing.listing_versions ?? [])].sort((a, b) => b.version_number - a.version_number)[0]; return <article key={listing.id}><div className="listing-record-status"><span>{listing.lifecycle_state.replaceAll("_", " ")}</span><small>{version?.revision_state.replaceAll("_", " ") ?? "No version"}</small></div><div><h3>{version?.title ?? "Untitled listing"}</h3><p>{version ? `${version.purpose === "sale" ? "For sale" : "Long-term rental"} · ${new Intl.NumberFormat("en-JM", { style: "currency", currency: version.currency, maximumFractionDigits: 0 }).format(version.price)}` : "Listing details unavailable"}</p></div><Link href={`/workspace/listings/${listing.id}`} className="outline-dark-button">Open listing</Link></article>; }) : <div className="builder-listing-empty">No listings are available yet. Create a private draft below to begin.</div>}</div>
+    </section>
+    {canCreateListings ? <section id="builder-create" className="builder-listing-panel builder-create-panel"><div className="card-heading"><span>New brokerage record</span><h2>Create listing</h2></div><p>Save the property as a private draft. You can edit it and add images before submitting it for brokerage approval.</p><CreateListingForm parishes={parishes} returnTo="/workspace/site" /></section> : null}
     {site.site_type === "agent" ? <section id="builder-testimonials" className="testimonial-builder">
       <div className="card-heading"><span>Client stories</span><h2>Testimonials</h2></div>
       <p>Add up to ten client testimonials. Each one rotates on your public agent website.</p>

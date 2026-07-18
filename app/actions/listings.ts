@@ -77,7 +77,8 @@ export async function createListingDraftAction(
   _previousState: CreateListingDraftState,
   formData: FormData,
 ): Promise<CreateListingDraftState> {
-  const context = await getActiveMembershipContext("/workspace/listings/new");
+  const returnTo = readText(formData, "returnTo") === "/workspace/site" ? "/workspace/site" : "/workspace/listings";
+  const context = await getActiveMembershipContext(returnTo);
   const canCreate = Boolean(context.membership)
     && (context.roles.includes("agent") || context.roles.includes("broker"));
   if (!canCreate) redirect("/access-denied?reason=listing-creation");
@@ -98,7 +99,8 @@ export async function createListingDraftAction(
 
   revalidatePath("/workspace");
   revalidatePath("/workspace/listings");
-  redirect("/workspace/listings?notice=Private+draft+created.+Only+you+and+authorized+brokerage+reviewers+can+see+it.");
+  revalidatePath("/workspace/site");
+  redirect(`${returnTo}?notice=Private+draft+created.+Only+you+and+authorized+brokerage+reviewers+can+see+it.`);
 }
 
 export type SaveListingDraftResult =
