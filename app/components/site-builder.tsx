@@ -34,6 +34,8 @@ const allSections = [
 type Site = {
   id: string;
   site_type: string;
+  owner_person_id: string | null;
+  owner_brokerage_id: string | null;
   display_name: string;
   headline: string | null;
   slug: string;
@@ -58,19 +60,15 @@ type Testimonial = {
   created_at: string;
 };
 type SiteAsset = { id: string; site_id: string; placement: string };
-type ListingVersion = {
-  version_number: number;
+type Listing = {
+  listing_id: string;
   title: string;
   purpose: string;
   price: number;
   currency: string;
-  revision_state: string;
-};
-type Listing = {
-  id: string;
-  lifecycle_state: string;
-  updated_at: string;
-  listing_versions: ListingVersion[] | null;
+  brokerage_id: string;
+  assigned_agent_person_id: string;
+  published_at: string;
 };
 type Parish = { id: string; name: string };
 const themeFields: { key: keyof SiteTheme; label: string; help: string }[] = [
@@ -406,6 +404,11 @@ export function SiteBuilder({
   const selectPanel = (key: string) => {
     setActivePanel(key);
   };
+  const siteListings = listings.filter((listing) =>
+    site.site_type === "brokerage"
+      ? listing.brokerage_id === site.owner_brokerage_id
+      : listing.assigned_agent_person_id === site.owner_person_id,
+  );
   return (
     <section className="site-builder-workspace">
       <nav className="site-builder-nav" aria-label="Website editor sections">
@@ -699,32 +702,22 @@ export function SiteBuilder({
               review its approval state, or manage its images.
             </p>
             <div className="builder-listing-records">
-              {listings.length ? (
-                listings.map((listing) => {
-                  const version = [...(listing.listing_versions ?? [])].sort(
-                    (a, b) => b.version_number - a.version_number,
-                  )[0];
+              {siteListings.length ? (
+                siteListings.map((listing) => {
                   return (
-                    <article key={listing.id}>
+                    <article key={listing.listing_id}>
                       <div className="listing-record-status">
-                        <span>
-                          {listing.lifecycle_state.replaceAll("_", " ")}
-                        </span>
-                        <small>
-                          {version?.revision_state.replaceAll("_", " ") ??
-                            "No version"}
-                        </small>
+                        <span>Published</span>
+                        <small>Live website</small>
                       </div>
                       <div>
-                        <h3>{version?.title ?? "Untitled listing"}</h3>
+                        <h3>{listing.title}</h3>
                         <p>
-                          {version
-                            ? `${version.purpose === "sale" ? "For sale" : "Long-term rental"} · ${new Intl.NumberFormat("en-JM", { style: "currency", currency: version.currency, maximumFractionDigits: 0 }).format(version.price)}`
-                            : "Listing details unavailable"}
+                          {`${listing.purpose === "sale" ? "For sale" : "Long-term rental"} · ${new Intl.NumberFormat("en-JM", { style: "currency", currency: listing.currency, maximumFractionDigits: 0 }).format(listing.price)}`}
                         </p>
                       </div>
                       <Link
-                        href={`/workspace/listings/${listing.id}`}
+                        href={`/workspace/listings/${listing.listing_id}`}
                         className="outline-dark-button"
                       >
                         Open listing

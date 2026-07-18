@@ -467,7 +467,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .account-page { background: var(--cream); min-height: 100vh; }
 .account-header { align-items: center; background: var(--ink); border-bottom: 2px solid #fff; color: #fff; display: flex; min-height: 78px; padding: 0 clamp(24px, 5vw, 76px); }
 .account-header nav { display: flex; gap: 28px; margin-left: auto; }
-.account-header nav a { color: rgba(255,255,255,.68); font-size: 12px; }
+.account-header nav a { color: rgba(255,255,255,.68); font-size: 15px; }
 .account-session-actions { align-items: center; border-left: 1px solid rgba(255,255,255,.18); display: flex; gap: 12px; margin-left: 30px; padding-left: 30px; }
 .account-session-actions > span { color: rgba(255,255,255,.68); font-size: 11px; }
 .account-session-actions form { display: flex; }
@@ -478,7 +478,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .account-hero.compact { padding-bottom: 70px; padding-top: 54px; }
 .account-hero h1 { color: var(--lime); font-family: Georgia, serif; font-size: clamp(48px, 6vw, 78px); font-weight: 400; letter-spacing: -.055em; margin: 24px 0 12px; }
 .account-hero p { color: rgba(255,255,255,.57); font-family: Georgia, serif; font-size: 17px; margin: 0; }
-.site-builder-hero { padding-bottom: 30px !important; padding-left: clamp(270px, 16vw, 320px) !important; padding-top: 24px !important; }.site-builder-hero .eyebrow, .site-builder-hero h1 { font-size: 15px; }.site-builder-hero h1 { letter-spacing: 0; margin: 13px 0 0; }
+.site-builder-hero { padding-bottom: 30px !important; padding-left: clamp(270px, 16vw, 320px) !important; padding-top: 24px !important; }.site-builder-hero .eyebrow, .site-builder-hero h1 { font-size: 15px; }.site-builder-hero .eyebrow { letter-spacing: .08em; text-transform: none; }.site-builder-hero h1 { letter-spacing: 0; margin: 13px 0 0; }
 .account-layout, .management-layout { display: grid; gap: 34px; grid-template-columns: minmax(0, 1fr) 320px; margin: -38px auto 0; max-width: 1250px; padding: 0 28px 90px; position: relative; }
 .management-layout { grid-template-columns: minmax(0, 1fr) 380px; }
 .account-main, .management-layout > div, .management-aside { display: flex; flex-direction: column; gap: 26px; }

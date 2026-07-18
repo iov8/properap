@@ -44,7 +44,7 @@ export async function proxy(request: NextRequest) {
     object-src 'none';
     base-uri 'self';
     form-action 'self';
-    frame-ancestors 'none';
+    frame-ancestors 'self';
     upgrade-insecure-requests;
   `
     .replace(/\s{2,}/g, " ")

@@ -68,11 +68,11 @@ export default async function SiteBuilderPage({
             )
             .eq("status", "ready"),
           context.supabase
-            .from("listings")
+            .from("public_listing_snapshots")
             .select(
-              "id,lifecycle_state,updated_at,listing_versions(version_number,title,purpose,price,currency,revision_state)",
+              "listing_id,title,purpose,price,currency,brokerage_id,assigned_agent_person_id,published_at",
             )
-            .order("updated_at", { ascending: false }),
+            .order("published_at", { ascending: false }),
           context.supabase
             .from("administrative_areas")
             .select("id,name")
@@ -98,7 +98,7 @@ export default async function SiteBuilderPage({
         <span className="eyebrow">
           <i /> Professional presence
         </span>
-        <h1>Build your website.</h1>
+        <h1>Build Your Website</h1>
       </section>
       <div className="account-main settings-main">
         {sites.length ? (

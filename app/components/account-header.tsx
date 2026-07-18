@@ -42,10 +42,6 @@ export function AccountHeader({
           <input type="hidden" name="scope" value="local" />
           <button className="text-button" type="submit">Sign out here</button>
         </form>
-        <form action={signOutAction} data-prompt-title="Sign out on every machine?" data-prompt-message="Every active SteadFast session for this account will be revoked, including this machine." data-prompt-confirm="Sign out everywhere" data-prompt-variant="danger">
-          <input type="hidden" name="scope" value="global" />
-          <button className="text-button" type="submit">All machines</button>
-        </form>
       </div>
     </header>
   );
