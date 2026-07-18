@@ -11,9 +11,9 @@ if (!url || !secret) throw new Error("Production Supabase credentials are requir
 const supabase = createClient(url, secret, { auth: { autoRefreshToken: false, persistSession: false } });
 const password = "CanadaSap!";
 const requestedAccounts = [
-  { label: "John Stamp", email: "johnstamp@canadasap.com", matches: ["john stamp", "johnstamp"] },
-  { label: "Karen Wei", email: "karenwei@canadasap.com", matches: ["karen wei", "karen"] },
-  { label: "Tony Lin", email: "tonylin@canadasap.com", matches: ["tony lin", "lin", "tony"] },
+  { label: "John Stamp", email: "johnstamp@canadasap.com", matches: (value) => value.includes("john") && value.includes("stamp") },
+  { label: "Karen Wei", email: "karenwei@canadasap.com", matches: (value) => value.includes("karen") },
+  { label: "Tony Lin", email: "tonylin@canadasap.com", matches: (value) => value.includes("tony") || value.includes("lincanada") || value === "lin" },
 ];
 
 function normal(value) {
@@ -29,7 +29,7 @@ if (peopleError) throw peopleError;
 const resolved = requestedAccounts.map((account) => {
   const person = people.find((candidate) => {
     const values = [normal(candidate.display_name), normal(candidate.primary_email), normal(users.find((user) => user.id === candidate.auth_user_id)?.email)];
-    return account.matches.some((match) => values.some((value) => value.includes(match)));
+    return values.some(account.matches);
   });
   if (!person?.auth_user_id) throw new Error(`Could not identify the existing ${account.label} test account.`);
   const user = users.find((candidate) => candidate.id === person.auth_user_id);
