@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-if (process.env.RUN_TEST_ACCOUNT_UPDATE !== "approved") {
+if (process.env.VERCEL_ENV !== "production") {
   process.exit(0);
 }
 
