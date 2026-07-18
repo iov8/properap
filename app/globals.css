@@ -465,7 +465,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .invite-result input { font-size: 11px; }
 
 .account-page { background: var(--cream); min-height: 100vh; }
-.account-header { align-items: center; background: var(--ink); color: #fff; display: flex; min-height: 78px; padding: 0 clamp(24px, 5vw, 76px); }
+.account-header { align-items: center; background: var(--ink); border-bottom: 2px solid #fff; color: #fff; display: flex; min-height: 78px; padding: 0 clamp(24px, 5vw, 76px); }
 .account-header nav { display: flex; gap: 28px; margin-left: auto; }
 .account-header nav a { color: rgba(255,255,255,.68); font-size: 12px; }
 .account-session-actions { align-items: center; border-left: 1px solid rgba(255,255,255,.18); display: flex; gap: 12px; margin-left: 30px; padding-left: 30px; }
