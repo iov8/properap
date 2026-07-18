@@ -51,11 +51,23 @@ export async function proxy(request: NextRequest) {
     .replace(/\s{2,}/g, " ")
     .trim();
 
+  const hostname = request.nextUrl.hostname.toLowerCase();
+
+  // `www` is the public entry point, not a customer website slug. Keep one
+  // canonical address so the wildcard subdomain rule below only handles
+  // actual agent and brokerage sites.
+  if (hostname === "www.canadasap.com") {
+    const canonicalUrl = new URL(request.url);
+    canonicalUrl.hostname = "canadasap.com";
+    const response = NextResponse.redirect(canonicalUrl, 308);
+    response.headers.set("Content-Security-Policy", policy);
+    return response;
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", policy);
 
-  const hostname = request.nextUrl.hostname.toLowerCase();
   const cookieDomain = hostname === "canadasap.com" || hostname.endsWith(".canadasap.com")
     ? ".canadasap.com"
     : undefined;
