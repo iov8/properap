@@ -9,7 +9,7 @@ import { getActiveMembershipContext } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sanitizeSiteRichText } from "@/lib/sites/rich-text";
 
-const sections = ["hero", "about", "search", "listings", "testimonials", "contact"] as const;
+const sections = ["hero", "about", "team", "search", "listings", "testimonials", "contact"] as const;
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const contentSchema = z.object({
   aboutHeading: z.string().trim().max(160).optional(),
@@ -44,13 +44,17 @@ export async function saveSiteBuilderAction(formData: FormData) {
   const siteId = z.string().uuid().safeParse(text(formData, "siteId"));
   const returnTab = z.enum(["agent", "broker"]).catch("agent").parse(text(formData, "returnTab"));
   const headline = z.string().trim().max(240).safeParse(text(formData, "headline"));
-  const sectionOrder = z.array(z.enum(sections)).length(sections.length).safeParse(JSON.parse(text(formData, "sectionOrder") || "[]"));
+  const sectionOrder = z.array(z.enum(sections)).safeParse(JSON.parse(text(formData, "sectionOrder") || "[]"));
   const content = contentSchema.safeParse(JSON.parse(text(formData, "content") || "{}"));
   const theme = z.object({ primary: hex, accent: hex, background: hex, text: hex }).safeParse(JSON.parse(text(formData, "theme") || "{}"));
-  if (!siteId.success || !headline.success || !sectionOrder.success || new Set(sectionOrder.data).size !== sections.length || !content.success || !theme.success) {
+  if (!siteId.success || !headline.success || !sectionOrder.success || !content.success || !theme.success) {
     redirect("/workspace/site?error=Please+check+your+website+settings.");
   }
   const { admin, site } = await requireOwnedSite(siteId.data);
+  const expectedSections = site.site_type === "brokerage" ? sections.filter((section) => section !== "testimonials") : sections.filter((section) => section !== "team");
+  if (sectionOrder.data.length !== expectedSections.length || new Set(sectionOrder.data).size !== expectedSections.length || expectedSections.some((section) => !sectionOrder.data.includes(section))) {
+    redirect("/workspace/site?error=Please+check+your+website+section+order.");
+  }
   const safeContent = { ...content.data, aboutHtml: sanitizeSiteRichText(content.data.aboutHtml) };
   const { error } = await admin.from("professional_sites").update({
     headline: headline.data || null, layout: { sectionOrder: sectionOrder.data }, content: safeContent, theme: { ...theme.data, managedBy: "site-builder" },

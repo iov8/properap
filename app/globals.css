@@ -842,6 +842,25 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .demo-listing-notice p { margin: .35rem 0; color: var(--charcoal); }
 .demo-listing-notice a { color: var(--evergreen); font-weight: 700; text-decoration: underline; }
 
+.professional-site-team { background: var(--site-background); margin: 0 auto; max-width: 1280px; padding: 54px 36px 64px; }
+.professional-site-team-heading { margin-bottom: 24px; text-align: center; }
+.professional-site-team-heading span { color: var(--site-accent); display: block; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.professional-site-team-heading h2 { color: var(--site-text); font-family: Georgia, serif; font-size: clamp(32px, 4vw, 48px); font-weight: 400; margin: 8px 0 0; }
+.brokerage-team-grid { display: grid; gap: 18px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.brokerage-team-card { background: #fff; border: 1px solid color-mix(in srgb, var(--site-text) 20%, transparent); color: var(--site-text); display: block; min-width: 0; padding: 12px; text-align: center; text-decoration: none; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.brokerage-team-card:hover, .brokerage-team-card:focus-visible { border-color: var(--site-accent); box-shadow: 0 12px 25px color-mix(in srgb, var(--site-text) 12%, transparent); outline: none; transform: translateY(-3px); }
+.brokerage-team-photo { align-items: center; aspect-ratio: 1 / 1; background: color-mix(in srgb, var(--site-primary) 10%, #fff); display: flex; justify-content: center; overflow: hidden; }
+.brokerage-team-photo img { height: 100%; object-fit: cover; width: 100%; }
+.brokerage-team-photo span { color: var(--site-primary); font-family: Georgia, serif; font-size: 42px; }
+.brokerage-team-card strong { display: block; font-size: 16px; line-height: 1.25; padding: 14px 4px 4px; }
+.brokerage-team-pagination { display: flex; gap: 8px; justify-content: center; margin-top: 26px; }
+.brokerage-team-pagination button { background: #fff; border: 1px solid color-mix(in srgb, var(--site-text) 25%, transparent); color: var(--site-text); cursor: pointer; font-size: 15px; min-height: 40px; min-width: 40px; }
+.brokerage-team-pagination button:hover, .brokerage-team-pagination button:focus-visible, .brokerage-team-pagination button.active { background: var(--site-primary); border-color: var(--site-primary); color: var(--site-background); outline: none; }
+
+@media (max-width: 960px) { .brokerage-team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 680px) { .professional-site-team { padding-left: 24px; padding-right: 24px; } }
+@media (max-width: 620px) { .brokerage-team-grid { grid-template-columns: 1fr; } }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }

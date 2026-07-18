@@ -5,8 +5,8 @@ import { useFormStatus } from "react-dom";
 import { createSiteTestimonialAction, removeSiteTestimonialAction, saveSiteBuilderAction, updateSiteTestimonialAction, uploadSiteAssetAction } from "@/app/actions/site-builder";
 import { compressListingImage } from "@/lib/media/client-image-compression";
 
-const labels: Record<string, string> = { hero: "Hero", about: "About", search: "Property search", listings: "Listings", testimonials: "Testimonials", contact: "Contact" };
-const allSections = ["hero", "about", "search", "listings", "testimonials", "contact"];
+const labels: Record<string, string> = { hero: "Hero", about: "About", team: "Brokerage team", search: "Property search", listings: "Listings", testimonials: "Testimonials", contact: "Contact" };
+const allSections = ["hero", "about", "team", "search", "listings", "testimonials", "contact"];
 type Site = { id: string; site_type: string; display_name: string; headline: string | null; slug: string; theme: Record<string, unknown> | null; layout: Record<string, unknown> | null; content: Record<string, unknown> | null };
 type SiteTheme = { primary: string; accent: string; background: string; text: string };
 type Testimonial = { id: string; site_id: string; author_name: string; author_context: string | null; quote: string; asset_id: string | null; position: number; created_at: string };
@@ -56,8 +56,9 @@ export function SiteBuilderTabs({ sites, testimonials, assets, initialTab }: { s
 }
 
 export function SiteBuilder({ site, testimonials, assets }: { site: Site; testimonials: Testimonial[]; assets: SiteAsset[] }) {
-  const savedOrder = Array.isArray(site.layout?.sectionOrder) ? site.layout.sectionOrder.filter((value): value is string => allSections.includes(String(value))) : allSections;
-  const [order, setOrder] = useState(savedOrder.length === allSections.length ? savedOrder : allSections);
+  const availableSections = site.site_type === "brokerage" ? allSections.filter((section) => section !== "testimonials") : allSections.filter((section) => section !== "team");
+  const savedOrder = Array.isArray(site.layout?.sectionOrder) ? site.layout.sectionOrder.filter((value): value is string => availableSections.includes(String(value))) : availableSections;
+  const [order, setOrder] = useState(savedOrder.length === availableSections.length ? savedOrder : availableSections);
   const [headline, setHeadline] = useState(String(site.headline ?? ""));
   const [aboutHeading, setAboutHeading] = useState(String(site.content?.aboutHeading ?? ""));
   const [aboutHtml, setAboutHtml] = useState(String(site.content?.aboutHtml ?? ""));
@@ -104,9 +105,9 @@ export function SiteBuilder({ site, testimonials, assets }: { site: Site; testim
       <label><span>Public phone</span><input maxLength={40} value={contactPhone} onChange={(event) => setContactPhone(event.currentTarget.value)} /></label><label><span>Career strengths</span><input maxLength={800} value={strengths} onChange={(event) => setStrengths(event.currentTarget.value)} /></label>
     </form>
     {site.site_type === "agent" ? <section className="site-asset-section agent-hero-background-upload"><div className="card-heading"><span>Agent website banner</span><h2>Ocean-view background</h2></div><p>The included Jamaica ocean view is the default. To use your own, upload a wide JPEG, PNG, or WebP image at <strong>2400 × 800 pixels</strong> (3:1). Files must be at least 1500 × 500 pixels and under 5 MB.</p>{assetFor("hero_background") && !unavailableAssetIds.includes(assetFor("hero_background")!.id) ? <div className="site-asset-preview banner-preview"><img src={`/media/sites/${assetFor("hero_background")!.id}/display.webp`} alt="Current agent website background" onError={() => setUnavailableAssetIds((current) => [...new Set([...current, assetFor("hero_background")!.id])])} /></div> : <div className="site-asset-preview banner-preview default-banner-preview"><span>{assetFor("hero_background") ? "No image uploaded yet" : "Default ocean-view banner in use"}</span></div>}<form action={uploadSiteAssetAction} className="stack-form site-asset-upload" data-prompt-title="Save this agent website background?" data-prompt-message="It will be compressed to WebP, stripped of metadata, and replace the default ocean-view banner on your agent website." data-prompt-confirm="Save background image"><input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="placement" value="hero_background" /><label className="site-file-picker"><span>Background image</span><input className="site-file-input" name="asset" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => void compressTestimonial(event, setHeroFileName)} required /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">{heroFileName || "No file chosen"}</span></span></label><ImageUploadButton /></form></section> : null}
-    <section className="testimonial-builder">
+    {site.site_type === "agent" ? <section className="testimonial-builder">
       <div className="card-heading"><span>Client stories</span><h2>Testimonials</h2></div>
-      <p>Add up to ten client testimonials. Each one rotates on the public {site.site_type === "brokerage" ? "brokerage" : "agent"} website.</p>
+      <p>Add up to ten client testimonials. Each one rotates on your public agent website.</p>
       <form action={createSiteTestimonialAction} className="stack-form testimonial-form" data-prompt-title="Add this testimonial?" data-prompt-message="This client story will appear publicly on your professional website after it is saved." data-prompt-confirm="Add testimonial">
         <input type="hidden" name="siteId" value={site.id} />
         <label className="full"><span>Client name</span><input name="authorName" required maxLength={120} /></label>
@@ -115,7 +116,7 @@ export function SiteBuilder({ site, testimonials, assets }: { site: Site; testim
         <AddTestimonialButton />
       </form>
       {testimonials.length ? <div className="testimonial-records"><table><thead><tr><th>Client name</th><th>Date</th><th>Image</th><th><span className="sr-only">Edit</span></th><th><span className="sr-only">Delete</span></th></tr></thead><tbody>{testimonials.map((testimonial) => <tr key={testimonial.id}><td>{testimonial.author_name}</td><td>{new Intl.DateTimeFormat("en-JM", { day: "numeric", month: "short", year: "numeric" }).format(new Date(testimonial.created_at))}</td><td><span className={`image-status ${testimonial.asset_id ? "has-image" : "no-image"}`} title={testimonial.asset_id ? "Image uploaded" : "No image uploaded"} aria-label={testimonial.asset_id ? "Image uploaded" : "No image uploaded"}>{testimonial.asset_id ? "✓" : "×"}</span></td><td><button className="icon-action" type="button" aria-label={`Edit testimonial from ${testimonial.author_name}`} title="Edit testimonial" onClick={() => { setEditingTestimonial(testimonial); setEditTestimonialFileName(""); }}>✎</button></td><td><form action={removeSiteTestimonialAction} data-prompt-title="Remove this testimonial?" data-prompt-message="It will no longer appear on the public website." data-prompt-confirm="Delete testimonial" data-prompt-variant="danger"><input type="hidden" name="siteId" value={site.id} /><input type="hidden" name="testimonialId" value={testimonial.id} /><button className="icon-action delete" type="submit" aria-label={`Delete testimonial from ${testimonial.author_name}`} title="Delete testimonial">⌫</button></form></td></tr>)}</tbody></table></div> : null}
-    </section>
+    </section> : null}
     <section className="site-asset-section">
       <div className="card-heading"><span>Professional presence</span><h2>{site.site_type === "brokerage" ? "Brokerage logo" : "Professional photo"}</h2></div>
       <p>Choose the image visitors see on your public {site.site_type === "brokerage" ? "brokerage" : "agent"} website.</p>
