@@ -368,7 +368,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 11px; }
 .brokerage-site-hero .professional-site-hero-content, .agent-site-hero .professional-site-hero-content { align-items: center; display: flex; gap: clamp(34px, 5vw, 90px); }
 .brokerage-site-hero .professional-site-hero-copy, .agent-site-hero .professional-site-hero-copy { flex: 1 1 460px; }
 .brokerage-site-hero .site-logo, .agent-site-hero .site-profile-photo { flex: 0 1 auto; margin: 0; }
-.agent-site-hero .site-profile-photo { border-radius: 0; height: clamp(210px, 23vw, 300px); max-width: 560px; width: min(38vw, 500px); }
+.agent-site-hero .site-profile-photo { background: color-mix(in srgb, var(--site-background, #fff) 88%, var(--site-primary, var(--evergreen))); border-radius: 0; height: clamp(210px, 23vw, 300px); max-width: 560px; object-fit: contain; width: min(38vw, 500px); }
 .professional-site-hero > span, .professional-site-intro span { color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 .professional-site-hero h1 { color: var(--site-on-primary, var(--ivory)); font-family: Georgia,serif; font-size: clamp(52px,8vw,104px); font-weight: 400; letter-spacing: -.055em; margin: 22px 0 18px; max-width: 980px; }
 .brokerage-site-hero .brokerage-site-title { font-size: clamp(30px, 5.5vw, 82px); max-width: none; overflow: hidden; text-overflow: clip; white-space: nowrap; width: 100%; }
