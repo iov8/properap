@@ -111,7 +111,7 @@ export function ListingMediaUploader({
         <strong>{images.length} / {MAX_LISTING_IMAGES}</strong>
       </div>
 
-      {images.length ? <div className="listing-media-grid">{images.map((image, index) => (
+      {images.length ? <div className="approval-image-previews">{images.map((image, index) => (
         <figure key={image.id}>
           {/* Signed, short-lived private URL generated only after listing authorization. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
