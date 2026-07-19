@@ -49,8 +49,16 @@ export function NotificationNavLink({ initialCount }: { initialCount: number }) 
 
   const label = count > 99 ? "99+" : String(count);
   return (
-    <Link className="notification-nav-link" href="/account/notifications">
-      <span>Notifications</span>
+    <Link
+      aria-label={`Notifications${count > 0 ? `, ${count} unread` : ""}`}
+      className="notification-nav-link"
+      href="/account/notifications"
+      title="Notifications"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+        <path d="M10 21h4" />
+      </svg>
       {count > 0 ? <strong aria-label={`${count} unread notification${count === 1 ? "" : "s"}`}>{label}</strong> : null}
     </Link>
   );

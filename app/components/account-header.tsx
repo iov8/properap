@@ -40,16 +40,17 @@ export async function AccountHeader({
         {canShareListings ? <Link href="/workspace/sharing">Sharing</Link> : null}
         {canManageInquiries ? <Link href="/workspace/inquiries">Inquiries</Link> : null}
         {canManageAgents ? <Link href="/broker/agents">Team</Link> : null}
-        <NotificationNavLink initialCount={unreadNotificationCount ?? 0} />
-        <Link href="/account/profile">Profile</Link>
         <Link href="/account">My account</Link>
         <Link href="/account/security">Security</Link>
+        <NotificationNavLink initialCount={unreadNotificationCount ?? 0} />
       </nav>
       <div className="account-session-actions">
         <span>{displayName}</span>
         <form action={signOutAction} data-prompt-title="Sign out on this machine?" data-prompt-message="Only this browser session will end. Other machines remain signed in." data-prompt-confirm="Sign out here">
           <input type="hidden" name="scope" value="local" />
-          <button className="text-button" type="submit">Sign out here</button>
+          <button aria-label="Sign out on this machine" className="account-exit-button" title="Sign out on this machine" type="submit">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M10 5H5v14h5" /><path d="M14 8l4 4-4 4" /><path d="M8 12h10" /></svg>
+          </button>
         </form>
       </div>
     </header>

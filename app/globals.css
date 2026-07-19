@@ -500,11 +500,14 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .account-header { align-items: center; background: var(--ink); border-bottom: 2px solid #fff; color: #fff; display: flex; min-height: 78px; padding: 0 clamp(24px, 5vw, 76px); }
 .account-header nav { display: flex; gap: 28px; margin-left: auto; }
 .account-header nav a { color: rgba(255,255,255,.68); font-size: 15px; }
-.account-header nav .notification-nav-link { align-items: center; display: inline-flex; gap: 7px; }
-.notification-nav-link strong { align-items: center; background: var(--coral); border: 1px solid rgba(255,255,255,.8); border-radius: 999px; color: #fff; display: inline-flex; font-size: 15px; font-weight: 800; justify-content: center; line-height: 1; min-height: 24px; min-width: 24px; padding: 3px 6px; }
+.account-header nav .notification-nav-link { align-items: center; color: rgba(255,255,255,.82); display: inline-flex; gap: 0; position: relative; }
+.notification-nav-link svg, .account-exit-button svg { fill: none; height: 23px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; width: 23px; }
+.notification-nav-link:hover, .account-exit-button:hover { color: #fff; }
+.notification-nav-link strong { align-items: center; background: var(--coral); border: 1px solid #fff; border-radius: 999px; color: #fff; display: inline-flex; font-size: 12px; font-weight: 800; justify-content: center; line-height: 1; min-height: 19px; min-width: 19px; padding: 2px 4px; position: absolute; right: -11px; top: -9px; }
 .account-session-actions { align-items: center; border-left: 1px solid rgba(255,255,255,.18); display: flex; gap: 12px; margin-left: 30px; padding-left: 30px; }
 .account-session-actions > span { color: rgba(255,255,255,.68); font-size: 15px; }
 .account-session-actions form { display: flex; }
+.account-exit-button { align-items: center; background: transparent; border: 0; color: var(--gold); cursor: pointer; display: inline-flex; justify-content: center; min-height: 42px; min-width: 42px; padding: 7px; }
 .remember-device { align-items: center; color: #52635f; display: flex !important; font-size: 15px; gap: 9px; }
 .remember-device input { accent-color: var(--ink); }
 .text-button { background: none; border: 0; color: var(--lime); cursor: pointer; font-size: 15px; font-weight: 700; padding: 0; }
@@ -516,6 +519,11 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .account-hero p { color: rgba(255,255,255,.57); font-family: Georgia, serif; font-size: 17px; margin: 0; }
 .site-builder-hero { padding-bottom: 30px !important; padding-left: clamp(270px, 16vw, 320px) !important; padding-top: 24px !important; }.site-builder-hero .eyebrow, .site-builder-hero h1 { font-size: 15px; }.site-builder-hero .eyebrow { letter-spacing: .08em; text-transform: none; }.site-builder-hero h1 { letter-spacing: 0; margin: 13px 0 0; }
 .account-layout, .management-layout { display: grid; gap: 34px; grid-template-columns: minmax(0, 1fr) 320px; margin: -38px auto 0; max-width: 1250px; padding: 0 28px 90px; position: relative; }
+.account-settings-layout { display: grid; gap: 24px; grid-template-columns: 190px minmax(0, 1fr) 320px; margin: -38px auto 0; max-width: 1440px; padding: 0 28px 90px; position: relative; }
+.account-section-nav { align-self: start; background: var(--ink); display: grid; gap: 3px; padding: 14px 10px; position: sticky; top: 18px; }
+.account-section-nav > span { color: var(--gold); font-size: 15px; font-weight: 700; letter-spacing: .09em; padding: 8px 10px 12px; text-transform: uppercase; }
+.account-section-nav a { align-items: center; color: rgba(255,255,255,.78); display: flex; font-size: 15px; font-weight: 700; min-height: 44px; padding: 0 12px; }
+.account-section-nav a:hover, .account-section-nav a.active { background: rgba(255,255,255,.13); color: #fff; }
 .management-layout { grid-template-columns: minmax(0, 1fr) 380px; }
 .account-main, .management-layout > div, .management-aside { display: flex; flex-direction: column; gap: 26px; }
 .settings-main { margin: -38px auto 0; max-width: 900px; padding: 0 28px 90px; position: relative; }
@@ -819,7 +827,9 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
   .auth-page { grid-template-columns: 1fr; }
   .auth-intro { min-height: 480px; }
   .auth-card { margin: 45px auto; width: calc(100% - 48px); }
-  .account-layout, .management-layout { grid-template-columns: 1fr; }
+  .account-layout, .management-layout, .account-settings-layout { grid-template-columns: 1fr; }
+  .account-section-nav { display: flex; position: static; }
+  .account-section-nav > span { margin-right: auto; }
   .workspace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .security-layout { grid-template-columns: 1fr; }
   .wizard-section { grid-template-columns: 1fr; }
@@ -856,7 +866,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
   .account-header nav, .account-session-actions > span { display: none; }
   .account-session-actions { margin-left: auto; }
   .account-hero { padding-left: 28px; padding-right: 28px; }
-  .account-layout, .management-layout, .settings-main { padding-left: 16px; padding-right: 16px; }
+  .account-layout, .management-layout, .account-settings-layout, .settings-main { padding-left: 16px; padding-right: 16px; }
   .account-card { padding: 24px; }
   .account-header { align-items: flex-start; flex-wrap: wrap; gap: 16px; padding-bottom: 18px; padding-top: 18px; }
   .account-header nav { flex-wrap: wrap; gap: 16px; order: 3; width: 100%; }

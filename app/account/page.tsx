@@ -6,6 +6,7 @@ import {
   submitAgentApplicationAction,
   updateProfileAction,
 } from "@/app/actions/onboarding";
+import { uploadSiteAssetAction } from "@/app/actions/site-builder";
 import { getActiveMembershipContext } from "@/lib/auth/session";
 import { deriveWorkspaceAccess } from "@/lib/auth/workspace-access";
 
@@ -24,11 +25,12 @@ const applicationLabels: Record<string, string> = {
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; notice?: string }>;
+  searchParams: Promise<{ error?: string; notice?: string; section?: string }>;
 }) {
   const params = await searchParams;
   const context = await getActiveMembershipContext();
-  const [{ data: brokerages }, { data: applications }] = await Promise.all([
+  const activeSection = params.section === "photo" ? "photo" : "profile";
+  const [{ data: brokerages }, { data: applications }, { data: site }] = await Promise.all([
     context.supabase
       .from("brokerages")
       .select("id, display_name, slug")
@@ -38,7 +40,17 @@ export default async function AccountPage({
       .from("agent_applications")
       .select("id, status, submitted_at, broker_reason, brokerages(display_name, slug)")
       .order("created_at", { ascending: false }),
+    context.supabase
+      .from("professional_sites")
+      .select("id,slug")
+      .eq("owner_person_id", context.person.id)
+      .eq("site_type", "agent")
+      .eq("status", "active")
+      .maybeSingle(),
   ]);
+  const { data: profileAsset } = site
+    ? await context.supabase.from("site_assets").select("id").eq("site_id", site.id).eq("placement", "profile_photo").eq("status", "ready").maybeSingle()
+    : { data: null };
 
   const access = deriveWorkspaceAccess({
     hasMembership: Boolean(context.membership),
@@ -58,9 +70,15 @@ export default async function AccountPage({
         <h1>Hello, {context.person.display_name}.</h1>
         <p>Keep your profile current and manage how you participate in the professional network.</p>
       </section>
-      <div className="account-layout">
+      <div className="account-settings-layout">
+        <nav aria-label="My account sections" className="account-section-nav">
+          <span>My account</span>
+          <Link className={activeSection === "profile" ? "active" : ""} href="/account?section=profile">Profile</Link>
+          <Link className={activeSection === "photo" ? "active" : ""} href="/account?section=photo">My photo</Link>
+        </nav>
         <div className="account-main">
           <StatusMessage error={params.error} notice={params.notice} />
+          {activeSection === "profile" ? <>
           <section className="account-card">
             <div className="card-heading"><span>Profile</span><h2>Your details</h2></div>
             <form action={updateProfileAction} className="stack-form two-column" data-prompt-title="Save your profile changes?" data-prompt-message="Your SteadFast display name and phone number will be updated for future account and professional use." data-prompt-confirm="Save profile">
@@ -93,6 +111,18 @@ export default async function AccountPage({
               })}</div>
             </section>
           ) : null}
+          </> : <section className="account-card profile-photo-card">
+            <div className="card-heading"><span>My photo</span><h2>How clients see you</h2></div>
+            <p>Your photograph appears on your public agent website and brokerage team card.</p>
+            {profileAsset ? <div className="site-asset-preview"><img src={`/media/sites/${profileAsset.id}/display.webp?v=${profileAsset.id}`} alt="Current professional profile" /></div> : <div className="site-asset-preview empty"><span>No photo uploaded yet</span></div>}
+            {site ? <form action={uploadSiteAssetAction} className="stack-form site-asset-upload" data-prompt-title="Save this professional photo?" data-prompt-message="It will be compressed, stripped of metadata, and shown on your public professional website." data-prompt-confirm="Save photo">
+              <input type="hidden" name="siteId" value={site.id} />
+              <input type="hidden" name="placement" value="profile_photo" />
+              <input type="hidden" name="returnTo" value="/account?section=photo" />
+              <label className="site-file-picker"><span>Professional photo</span><input className="site-file-input" name="asset" type="file" accept="image/jpeg,image/png,image/webp" required /><span className="site-file-picker-row"><span className="site-file-picker-button">Choose file</span><span className="site-file-name">JPEG, PNG, or WebP under 5 MB</span></span></label>
+              <button className="outline-dark-button image-upload-button" type="submit">Prepare and upload</button>
+            </form> : <p className="form-error">An active agent website is required before you can add a professional photo.</p>}
+          </section>}
         </div>
 
         <aside className="account-sidebar">
