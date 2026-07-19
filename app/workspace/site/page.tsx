@@ -49,7 +49,7 @@ export default async function SiteBuilderPage({
   );
   let privateListingsQuery = admin
     .from("listings")
-    .select("id,brokerage_id,created_by_person_id,lifecycle_state,updated_at,listing_versions(version_number,revision_state,title,purpose,price,currency)")
+    .select("id,brokerage_id,created_by_person_id,lifecycle_state,updated_at")
     .in("lifecycle_state", ["draft", "pending_initial_approval", "approved_inactive", "under_offer"])
     .order("updated_at", { ascending: false });
   if (context.membership?.brokerage_id) privateListingsQuery = privateListingsQuery.eq("brokerage_id", context.membership.brokerage_id);
@@ -96,8 +96,22 @@ export default async function SiteBuilderPage({
       : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
   const testimonials = testimonialResult.data ?? [];
   const assets = assetResult.data ?? [];
-  const privateListings = (privateListingResult.data ?? []).flatMap((listing) => {
-    const versions = (listing.listing_versions as unknown as Array<{ version_number: number; revision_state: string; title: string; purpose: string; price: number; currency: string }> | null) ?? [];
+  const privateListingRows = privateListingResult.data ?? [];
+  const privateListingIds = privateListingRows.map((listing) => listing.id);
+  const { data: privateVersionRows } = privateListingIds.length
+    ? await admin
+        .from("listing_versions")
+        .select("listing_id,version_number,revision_state,title,purpose,price,currency")
+        .in("listing_id", privateListingIds)
+    : { data: [] as Array<{ listing_id: string; version_number: number; revision_state: string; title: string; purpose: string; price: number; currency: string }> };
+  const privateVersionsByListing = new Map<string, typeof privateVersionRows>();
+  for (const version of privateVersionRows ?? []) {
+    const versions = privateVersionsByListing.get(version.listing_id) ?? [];
+    versions.push(version);
+    privateVersionsByListing.set(version.listing_id, versions);
+  }
+  const privateListings = privateListingRows.flatMap((listing) => {
+    const versions = privateVersionsByListing.get(listing.id) ?? [];
     const version = [...versions].sort((left, right) => right.version_number - left.version_number)[0];
     return version ? [{ listing_id: listing.id, title: version.title, purpose: version.purpose, price: version.price, currency: version.currency, brokerage_id: listing.brokerage_id, assigned_agent_person_id: listing.created_by_person_id, published_at: listing.updated_at, lifecycle_state: listing.lifecycle_state, revision_state: version.revision_state }] : [];
   });

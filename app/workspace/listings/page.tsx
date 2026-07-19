@@ -10,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const metadata: Metadata = { title: "Listings", description: "Manage private and approved brokerage property listings.", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-type Version = { version_number: number; title: string; purpose: string; price: number; currency: string; revision_state: string };
+type Version = { listing_id: string; version_number: number; title: string; purpose: string; price: number; currency: string; revision_state: string };
 
 export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
   const params = await searchParams;
@@ -24,14 +24,29 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   // returns only the current brokerage inventory (or the agent's own work).
   const admin = createAdminClient();
   let listingsQuery = admin.from("listings")
-    .select("id, lifecycle_state, updated_at, listing_versions(version_number,title,purpose,price,currency,revision_state)")
+    .select("id, lifecycle_state, updated_at")
     .order("updated_at", { ascending: false });
   if (access.canReviewListings && context.membership.brokerage_id) {
     listingsQuery = listingsQuery.eq("brokerage_id", context.membership.brokerage_id);
   } else {
     listingsQuery = listingsQuery.eq("created_by_person_id", context.person.id);
   }
-  const { data: listings } = await listingsQuery;
+  const { data: listingRows } = await listingsQuery;
+  const listingIds = (listingRows ?? []).map((listing) => listing.id);
+  const { data: versionRows } = listingIds.length
+    ? await admin
+        .from("listing_versions")
+        .select("listing_id,version_number,title,purpose,price,currency,revision_state")
+        .in("listing_id", listingIds)
+    : { data: [] as Version[] };
+  const versionsByListing = new Map<string, Version[]>();
+  for (const version of (versionRows ?? []) as Version[]) {
+    versionsByListing.set(version.listing_id, [...(versionsByListing.get(version.listing_id) ?? []), version]);
+  }
+  const listings = (listingRows ?? []).map((listing) => ({
+    ...listing,
+    listing_versions: versionsByListing.get(listing.id) ?? [],
+  }));
   const brokerage = context.membership.brokerages as unknown as { display_name?: string } | null;
 
   return <main className="account-page">
