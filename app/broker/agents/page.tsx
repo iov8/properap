@@ -1,90 +1,148 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { decideAgentApplicationAction, departAgentAction } from "@/app/actions/onboarding";
+import { changeMembershipStatusAction, decideAgentApplicationAction } from "@/app/actions/onboarding";
 import { AccountHeader } from "@/app/components/account-header";
 import { InvitationForm } from "@/app/components/invitation-form";
 import { StaffCapabilityPanel } from "@/app/components/staff-capability-panel";
 import { StatusMessage } from "@/app/components/status-message";
 import { getActiveMembershipContext } from "@/lib/auth/session";
 import { deriveWorkspaceAccess } from "@/lib/auth/workspace-access";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-export const metadata: Metadata = { title: "Agent management", description: "Manage brokerage agents, staff permissions, and applications.", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Team management", description: "Manage brokerage team members, access, and agent applications.", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
-export default async function BrokerAgentsPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
+type TeamSection = "members" | "applications";
+type Person = { display_name?: string; primary_email?: string } | null;
+type Role = { role_key: string; ends_at: string | null };
+type Permission = { permission_key: string; effect: string; ends_at: string | null };
+
+function splitName(displayName?: string) {
+  const parts = (displayName ?? "Team member").trim().split(/\s+/);
+  return { firstName: parts[0] ?? "Team", lastName: parts.slice(1).join(" ") || "—" };
+}
+
+function GlobeIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c3 3 4 6 4 9s-1 6-4 9c-3-3-4-6-4-9s1-6 4-9Z" /></svg>;
+}
+
+function PauseIcon({ reactivate = false }: { reactivate?: boolean }) {
+  return reactivate
+    ? <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m8 5 10 7-10 7Z" /></svg>
+    : <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" /></svg>;
+}
+
+function RemoveIcon() {
+  return <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" /></svg>;
+}
+
+export default async function BrokerAgentsPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; section?: string }> }) {
   const params = await searchParams;
-  const context = await getActiveMembershipContext("/broker/agents");
+  const section: TeamSection = params.section === "applications" ? "applications" : "members";
+  const context = await getActiveMembershipContext(`/broker/agents?section=${section}`);
   if (!context.membership) redirect("/access-denied?reason=brokerage-membership");
 
   const access = deriveWorkspaceAccess({ hasMembership: true, roles: context.roles, permissions: context.permissions, platformRoles: context.platformRoles });
   const isBroker = context.roles.includes("broker");
-  const canManageAgents = access.canManageAgents;
-  if (!canManageAgents) redirect("/access-denied?reason=agent-management");
+  if (!access.canManageAgents) redirect("/access-denied?reason=agent-management");
   const canInvite = isBroker || context.permissions.some((permission) => permission.permission_key === "staff.manage_limited" && permission.effect === "allow");
+  const admin = createAdminClient();
+  const brokerageId = context.membership.brokerage_id;
 
   const [{ data: applications }, { data: members }, { data: invitations }] = await Promise.all([
-    context.supabase.from("agent_applications").select("id, status, submitted_at, broker_reason, people(display_name, primary_email)").eq("brokerage_id", context.membership.brokerage_id).order("submitted_at"),
-    context.supabase.from("brokerage_memberships").select("id, person_id, status, starts_at, people(display_name, primary_email), membership_roles(role_key, ends_at), membership_permissions(permission_key, effect, ends_at)").eq("brokerage_id", context.membership.brokerage_id).eq("status", "active").order("starts_at"),
-    canInvite ? context.supabase.from("brokerage_invitations").select("id, email, status, expires_at, created_at, brokerage_invitation_roles(role_key)").eq("brokerage_id", context.membership.brokerage_id).order("created_at", { ascending: false }).limit(10) : Promise.resolve({ data: [] }),
+    admin.from("agent_applications").select("id, status, submitted_at, broker_reason, people(display_name, primary_email)").eq("brokerage_id", brokerageId).order("submitted_at", { ascending: false }),
+    admin.from("brokerage_memberships").select("id, person_id, status, starts_at, people(display_name, primary_email), membership_roles(role_key, ends_at), membership_permissions(permission_key, effect, ends_at)").eq("brokerage_id", brokerageId).in("status", ["active", "suspended"]).order("starts_at"),
+    canInvite ? admin.from("brokerage_invitations").select("id, email, status, expires_at, created_at, brokerage_invitation_roles(role_key)").eq("brokerage_id", brokerageId).order("created_at", { ascending: false }).limit(10) : Promise.resolve({ data: [] }),
   ]);
+
+  const personIds = (members ?? []).map((member) => member.person_id);
+  const [{ data: sites }, { data: listings }] = await Promise.all([
+    personIds.length ? admin.from("professional_sites").select("id,owner_person_id,slug,status").eq("site_type", "agent").in("owner_person_id", personIds) : Promise.resolve({ data: [] }),
+    personIds.length ? admin.from("listings").select("id,created_by_person_id").eq("brokerage_id", brokerageId).in("created_by_person_id", personIds) : Promise.resolve({ data: [] }),
+  ]);
+  const siteIds = (sites ?? []).map((site) => site.id);
+  const { data: assets } = siteIds.length
+    ? await admin.from("site_assets").select("id,site_id").eq("placement", "profile_photo").eq("status", "ready").in("site_id", siteIds)
+    : { data: [] };
+  const siteByPerson = new Map((sites ?? []).map((site) => [site.owner_person_id, site]));
+  const assetBySite = new Map((assets ?? []).map((asset) => [asset.site_id, asset.id]));
+  const listingCountByPerson = new Map<string, number>();
+  for (const listing of listings ?? []) listingCountByPerson.set(listing.created_by_person_id, (listingCountByPerson.get(listing.created_by_person_id) ?? 0) + 1);
 
   const brokerage = context.membership.brokerages as unknown as { display_name?: string } | null;
   return (
     <main className="account-page">
-      <AccountHeader displayName={context.person.display_name} hasWorkspace={access.hasWorkspace} canManageAgents={access.canManageAgents} canManageInquiries={access.canManageInquiries} canShareListings={access.canShareListings} />
-      <section className="account-hero compact"><span className="eyebrow"><i /> Brokerage control</span><h1>Agents and access.</h1><p>{brokerage?.display_name ?? "Your brokerage"}</p></section>
-      <div className="management-layout">
-        <div>
-          <StatusMessage error={params.error} notice={params.notice} />
-          <section className="account-card">
-            <div className="card-heading"><span>Approval queue</span><h2>Agent applications</h2></div>
-            <div className="record-list">{applications?.length ? applications.map((application) => {
-              const person = application.people as unknown as { display_name?: string; primary_email?: string } | null;
-              return <article key={application.id}><div><strong>{person?.display_name ?? "Applicant"}</strong><span>{person?.primary_email ?? "Email unavailable"}</span></div><span className={`record-status status-${application.status}`}>{application.status.replaceAll("_", " ")}</span>{application.status === "submitted" ? <form action={decideAgentApplicationAction} className="decision-form"><input type="hidden" name="applicationId" value={application.id} /><label><span>Decision note</span><input name="reason" maxLength={2000} placeholder="Required when declining" /></label><button name="decision" value="approve" className="solid-button" type="submit" data-prompt-title="Approve this agent application?" data-prompt-message="The application will advance under this brokerage and remain subject to SteadFast platform approval." data-prompt-confirm="Approve application">Approve</button><button name="decision" value="deny" className="outline-dark-button" type="submit" data-prompt-title="Decline this agent application?" data-prompt-message="The applicant will not join this brokerage. The decision and your reason will be retained." data-prompt-confirm="Decline application" data-prompt-variant="danger">Decline</button></form> : null}</article>;
-            }) : <p className="muted-copy">No applications are waiting for review.</p>}</div>
-          </section>
-          <section className="account-card">
-            <div className="card-heading"><span>Current team</span><h2>Active members</h2></div>
-            <div className="record-list">{members?.map((member) => {
-              const person = member.people as unknown as { display_name?: string; primary_email?: string } | null;
-              const roles = member.membership_roles as unknown as { role_key: string; ends_at: string | null }[];
-              const permissions = member.membership_permissions as unknown as { permission_key: string; effect: string; ends_at: string | null }[];
-              const activeRoles = roles.filter((role) => !role.ends_at).map((role) => role.role_key);
-              const isStaff = activeRoles.includes("broker_staff");
-              const isPrincipalBroker = activeRoles.includes("broker");
-              const isAgent = activeRoles.includes("agent");
-              const activePermissionKeys = permissions
-                .filter((permission) => !permission.ends_at && permission.effect === "allow")
-                .map((permission) => permission.permission_key);
-
-              return (
-                <article key={member.id}>
-                  <div><strong>{person?.display_name ?? "Member"}</strong><span>{person?.primary_email ?? ""}</span></div>
-                  <span className="record-status">{activeRoles.map((role) => role.replaceAll("_", " ")).join(", ")}</span>
-                  {isBroker && isStaff && !isPrincipalBroker ? (
-                    <StaffCapabilityPanel membershipId={member.id} activePermissionKeys={activePermissionKeys} />
-                  ) : null}
-                  {canManageAgents && isAgent && !isPrincipalBroker && member.person_id !== context.person.id ? (
-                    <details className="departure-panel">
-                      <summary>End brokerage access</summary>
-                      <form action={departAgentAction} className="departure-form" data-prompt-title="End this agent’s brokerage access?" data-prompt-message="The agent will immediately lose brokerage access and represented listings will be removed from public display until reassigned." data-prompt-confirm="End access" data-prompt-variant="danger">
-                        <input name="membershipId" type="hidden" value={member.id} />
-                        <p><strong>Represented listings: 0</strong><br />Listing tools are not active yet. The person’s SteadFast login and personal account will remain active.</p>
-                        <label><span>Reason</span><input name="reason" minLength={3} maxLength={1000} required placeholder="Why is this agent leaving the brokerage?" /></label>
-                        <label className="check-row"><input name="confirmation" type="checkbox" required /> I confirm this agent’s brokerage access should end now.</label>
-                        <button className="danger-button" type="submit">End brokerage access</button>
-                      </form>
-                    </details>
-                  ) : null}
-                </article>
-              );
-            })}</div>
-          </section>
-        </div>
-        <aside className="management-aside">
-          {canInvite ? <section className="account-card"><div className="card-heading"><span>Invite</span><h2>Add a person</h2></div><InvitationForm brokerageId={context.membership.brokerage_id} /></section> : null}
-          {canInvite && invitations?.length ? <section className="account-card"><div className="card-heading"><span>Recent</span><h2>Invitations</h2></div><div className="mini-list">{invitations.map((invitation) => <div key={invitation.id}><strong>{invitation.email}</strong><span>{invitation.status} · expires {new Date(invitation.expires_at).toLocaleDateString("en-JM")}</span></div>)}</div></section> : null}
+      <AccountHeader displayName={context.person.display_name} hasWorkspace={access.hasWorkspace} canManageAgents={access.canManageAgents} canManageListings={access.isAgent || access.canReviewListings} canReviewListings={access.canReviewListings} canManageInquiries={access.canManageInquiries} canShareListings={access.canShareListings} />
+      <section className="account-hero compact"><span className="eyebrow"><i /> Brokerage control</span><h1>Team.</h1><p>{brokerage?.display_name ?? "Your brokerage"}</p></section>
+      <div className="team-management-layout">
+        <aside className="account-section-nav" aria-label="Team management sections">
+          <span>Team</span>
+          <Link className={section === "members" ? "active" : ""} href="/broker/agents?section=members">Team members</Link>
+          <Link className={section === "applications" ? "active" : ""} href="/broker/agents?section=applications">Applications</Link>
         </aside>
+        <div className="team-management-main">
+          <StatusMessage error={params.error} notice={params.notice} />
+          {section === "members" ? <>
+            <section className="account-card team-table-card">
+              <div className="card-heading"><span>Current team</span><h2>Team members</h2><p>Suspended members keep their CanadaSAP account but cannot use brokerage tools.</p></div>
+              <div className="team-table-scroll">
+                <table className="team-members-table">
+                  <thead><tr><th>Professional photo</th><th>First name</th><th>Last name</th><th>Date joined</th><th>Agent listings</th><th>Webpage</th><th>Action</th></tr></thead>
+                  <tbody>{(members ?? []).map((member) => {
+                    const person = member.people as unknown as Person;
+                    const { firstName, lastName } = splitName(person?.display_name);
+                    const roles = member.membership_roles as unknown as Role[];
+                    const activeRoles = roles.filter((role) => !role.ends_at).map((role) => role.role_key);
+                    const isPrincipalBroker = activeRoles.includes("broker");
+                    const site = siteByPerson.get(member.person_id);
+                    const photoId = site ? assetBySite.get(site.id) : null;
+                    const canAct = !isPrincipalBroker && member.person_id !== context.person.id;
+                    return <tr key={member.id} className={member.status === "suspended" ? "suspended" : ""}>
+                      <td><div className="team-member-photo">{photoId ? <Image alt={`${person?.display_name ?? "Team member"} professional photo`} height={64} src={`/media/sites/${photoId}/display.webp`} unoptimized width={64} /> : <span aria-label="No professional photo">{firstName.slice(0, 1)}</span>}</div></td>
+                      <td><strong>{firstName}</strong>{member.status === "suspended" ? <span className="team-member-state">Suspended</span> : null}</td>
+                      <td>{lastName}</td>
+                      <td>{member.starts_at ? new Date(member.starts_at).toLocaleDateString("en-JM", { year: "numeric", month: "short", day: "numeric" }) : "—"}</td>
+                      <td>{listingCountByPerson.get(member.person_id) ?? 0}</td>
+                      <td>{site ? <a aria-label={`Open ${person?.display_name ?? "member"} webpage in a new tab`} className="team-icon-link" href={`https://${site.slug}.canadasap.com`} rel="noopener noreferrer" target="_blank" title="Open webpage"><GlobeIcon /></a> : <span className="team-no-site">—</span>}</td>
+                      <td><div className="team-action-icons">
+                        {canAct ? <form action={changeMembershipStatusAction} data-prompt-title={member.status === "suspended" ? "Restore this member’s access?" : "Suspend this member’s access?"} data-prompt-message={member.status === "suspended" ? "The member will regain their assigned brokerage features." : "The member will immediately become read-only and lose access to all brokerage tools."} data-prompt-confirm={member.status === "suspended" ? "Restore access" : "Suspend access"}>
+                          <input name="membershipId" type="hidden" value={member.id} /><input name="operation" type="hidden" value={member.status === "suspended" ? "reactivate" : "suspend"} /><input name="reason" type="hidden" value={member.status === "suspended" ? "Access restored by brokerage team manager" : "Access suspended by brokerage team manager"} />
+                          <button aria-label={member.status === "suspended" ? `Restore ${person?.display_name ?? "member"}` : `Suspend ${person?.display_name ?? "member"}`} className="team-icon-button suspend" title={member.status === "suspended" ? "Restore access" : "Suspend access"} type="submit"><PauseIcon reactivate={member.status === "suspended"} /></button>
+                        </form> : null}
+                        {canAct ? <form action={changeMembershipStatusAction} data-prompt-title="Remove this member from the brokerage?" data-prompt-message="Their brokerage access will end immediately. Represented listings will be removed from public display until reassigned. Their personal CanadaSAP account remains active." data-prompt-confirm="Remove member" data-prompt-variant="danger">
+                          <input name="membershipId" type="hidden" value={member.id} /><input name="operation" type="hidden" value="remove" /><input name="reason" type="hidden" value="Removed by brokerage team manager" />
+                          <button aria-label={`Remove ${person?.display_name ?? "member"}`} className="team-icon-button remove" title="Remove from team" type="submit"><RemoveIcon /></button>
+                        </form> : null}
+                        {!canAct ? <span className="team-protected-member">Protected</span> : null}
+                      </div></td>
+                    </tr>;
+                  })}</tbody>
+                </table>
+              </div>
+            </section>
+            {isBroker ? <section className="account-card"><div className="card-heading"><span>Delegated access</span><h2>Staff capabilities</h2></div><div className="team-capability-list">{(members ?? []).map((member) => {
+              const roles = member.membership_roles as unknown as Role[];
+              const permissions = member.membership_permissions as unknown as Permission[];
+              const activeRoles = roles.filter((role) => !role.ends_at).map((role) => role.role_key);
+              if (!activeRoles.includes("broker_staff") || activeRoles.includes("broker")) return null;
+              const person = member.people as unknown as Person;
+              const activePermissionKeys = permissions.filter((permission) => !permission.ends_at && permission.effect === "allow").map((permission) => permission.permission_key);
+              return <div key={member.id}><strong>{person?.display_name ?? "Staff member"}</strong><StaffCapabilityPanel membershipId={member.id} activePermissionKeys={activePermissionKeys} /></div>;
+            })}</div></section> : null}
+          </> : <>
+            <section className="account-card">
+              <div className="card-heading"><span>Approval queue</span><h2>Agent applications</h2></div>
+              <div className="record-list">{applications?.length ? applications.map((application) => {
+                const person = application.people as unknown as Person;
+                return <article key={application.id}><div><strong>{person?.display_name ?? "Applicant"}</strong><span>{person?.primary_email ?? "Email unavailable"}</span><span>Applied {new Date(application.submitted_at).toLocaleDateString("en-JM")}</span></div><span className={`record-status status-${application.status}`}>{application.status.replaceAll("_", " ")}</span>{application.status === "submitted" ? <form action={decideAgentApplicationAction} className="decision-form"><input type="hidden" name="applicationId" value={application.id} /><label><span>Decision note</span><input name="reason" maxLength={2000} placeholder="Required when declining" /></label><button name="decision" value="approve" className="solid-button" type="submit" data-prompt-title="Approve this agent application?" data-prompt-message="The applicant will join this brokerage as an agent." data-prompt-confirm="Approve application">Approve</button><button name="decision" value="deny" className="outline-dark-button" type="submit" data-prompt-title="Decline this agent application?" data-prompt-message="The applicant will not join this brokerage. The decision and your reason will be retained." data-prompt-confirm="Decline application" data-prompt-variant="danger">Decline</button></form> : null}</article>;
+              }) : <p className="muted-copy">No agent applications have been received.</p>}</div>
+            </section>
+            {canInvite ? <section className="account-card"><div className="card-heading"><span>Invite</span><h2>Add a person</h2></div><InvitationForm brokerageId={brokerageId} /></section> : null}
+            {canInvite && invitations?.length ? <section className="account-card"><div className="card-heading"><span>Recent</span><h2>Invitations</h2></div><div className="mini-list">{invitations.map((invitation) => <div key={invitation.id}><strong>{invitation.email}</strong><span>{invitation.status} · expires {new Date(invitation.expires_at).toLocaleDateString("en-JM")}</span></div>)}</div></section> : null}
+          </>}
+        </div>
       </div>
     </main>
   );

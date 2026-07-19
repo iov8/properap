@@ -526,6 +526,29 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .account-section-nav a:hover, .account-section-nav a.active { background: rgba(255,255,255,.13); color: #fff; }
 .account-security-settings-layout .security-note { grid-column: 3; }
 .management-layout { grid-template-columns: minmax(0, 1fr) 380px; }
+.team-management-layout { display: grid; gap: 24px; grid-template-columns: 190px minmax(0, 1fr); margin: 24px auto 0; max-width: 1680px; padding: 0 28px 90px; position: relative; }
+.team-management-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.team-table-card { min-width: 0; }
+.team-table-scroll { margin-top: 26px; overflow-x: auto; }
+.team-members-table { border-collapse: collapse; min-width: 1050px; width: 100%; }
+.team-members-table th { background: #eef2ef; color: #52635f; font-size: 15px; font-weight: 700; letter-spacing: .07em; padding: 13px 14px; text-align: left; text-transform: uppercase; }
+.team-members-table td { border-bottom: 1px solid var(--line); font-size: 15px; padding: 14px; vertical-align: middle; }
+.team-members-table tr.suspended td { background: #faf1de; }
+.team-member-photo { align-items: center; background: var(--sage); border: 1px solid var(--line); border-radius: 50%; display: flex; height: 64px; justify-content: center; overflow: hidden; width: 64px; }
+.team-member-photo img { height: 100%; object-fit: cover; width: 100%; }
+.team-member-photo span { color: var(--evergreen); font-family: Georgia, serif; font-size: 25px; }
+.team-member-state { color: #8a5b00; display: block; font-size: 15px; font-weight: 700; margin-top: 5px; }
+.team-icon-link, .team-icon-button { align-items: center; background: #fff; border: 1px solid #9ca9a5; border-radius: 50%; color: var(--evergreen); cursor: pointer; display: inline-flex; height: 42px; justify-content: center; transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease; width: 42px; }
+.team-icon-link svg, .team-icon-button svg { fill: none; height: 21px; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; width: 21px; }
+.team-icon-button:hover, .team-icon-button:focus-visible, .team-icon-link:hover, .team-icon-link:focus-visible { background: var(--evergreen); border-color: var(--evergreen); color: #fff; outline: none; transform: translateY(-2px); }
+.team-icon-button.remove { border-color: #c98274; color: var(--error); }
+.team-icon-button.remove:hover, .team-icon-button.remove:focus-visible { background: var(--error); border-color: var(--error); color: #fff; }
+.team-action-icons { align-items: center; display: flex; gap: 8px; }
+.team-action-icons form { margin: 0; }
+.team-protected-member, .team-no-site { color: #7b8884; font-size: 15px; }
+.team-capability-list { display: grid; gap: 18px; margin-top: 22px; }
+.team-capability-list > div { border-top: 1px solid var(--line); padding-top: 18px; }
+.team-capability-list > div > strong { display: block; font-family: Georgia, serif; font-size: 18px; margin-bottom: 10px; }
 .account-main, .management-layout > div, .management-aside { display: flex; flex-direction: column; gap: 26px; }
 .settings-main { margin: -38px auto 0; max-width: 900px; padding: 0 28px 90px; position: relative; }
 .account-card { background: var(--paper); border: 1px solid var(--line); padding: 34px; }
@@ -830,7 +853,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
   .auth-page { grid-template-columns: 1fr; }
   .auth-intro { min-height: 480px; }
   .auth-card { margin: 45px auto; width: calc(100% - 48px); }
-  .account-layout, .management-layout, .account-settings-layout { grid-template-columns: 1fr; }
+  .account-layout, .management-layout, .account-settings-layout, .team-management-layout { grid-template-columns: 1fr; }
   .account-section-nav { display: flex; position: static; }
   .account-section-nav > span { margin-right: auto; }
   .workspace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -869,7 +892,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
   .account-header nav, .account-session-actions > span { display: none; }
   .account-session-actions { margin-left: auto; }
   .account-hero { padding-left: 28px; padding-right: 28px; }
-  .account-layout, .management-layout, .account-settings-layout, .settings-main { padding-left: 16px; padding-right: 16px; }
+  .account-layout, .management-layout, .account-settings-layout, .team-management-layout, .settings-main { padding-left: 16px; padding-right: 16px; }
   .account-card { padding: 24px; }
   .account-header { align-items: flex-start; flex-wrap: wrap; gap: 16px; padding-bottom: 18px; padding-top: 18px; }
   .account-header nav { flex-wrap: wrap; gap: 16px; order: 3; width: 100%; }

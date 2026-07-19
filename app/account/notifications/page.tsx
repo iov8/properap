@@ -21,6 +21,10 @@ function activityFor(eventType: string, actorName: string | null) {
   if (eventType === "listing.rejected") return `Rejected by ${person}`;
   if (eventType === "share.received") return `Shared by ${person}`;
   if (eventType === "share.removed" || eventType === "share.revoked") return `Updated by ${person}`;
+  if (eventType === "agent.application_submitted") return `Applied by ${person} · Awaiting review`;
+  if (eventType === "membership.suspended") return `Suspended by ${person}`;
+  if (eventType === "membership.reactivated") return `Restored by ${person}`;
+  if (eventType === "membership.removed") return `Removed by ${person}`;
   return `Updated by ${person}`;
 }
 

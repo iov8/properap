@@ -3,6 +3,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { getAppUrl } from "@/lib/app-url";
 import { safeInternalPath } from "@/lib/app-url";
 import { getActiveMembershipContext, requireAccount } from "@/lib/auth/session";
@@ -73,7 +74,7 @@ export async function decideAgentApplicationAction(formData: FormData) {
     reason: readText(formData, "reason"),
   });
 
-  if (!parsed.success) redirect("/broker/agents?error=Check+the+application+decision.");
+  if (!parsed.success) redirect("/broker/agents?section=applications&error=Check+the+application+decision.");
 
   const { error } = await context.supabase
     .from("agent_application_decision_commands")
@@ -83,9 +84,39 @@ export async function decideAgentApplicationAction(formData: FormData) {
       reason: parsed.data.reason || null,
     });
 
-  if (error) redirect("/broker/agents?error=The+application+decision+could+not+be+saved.");
+  if (error) redirect("/broker/agents?section=applications&error=The+application+decision+could+not+be+saved.");
   revalidatePath("/broker/agents");
-  redirect("/broker/agents?notice=Application+decision+saved.");
+  redirect("/broker/agents?section=applications&notice=Application+decision+saved.");
+}
+
+const membershipStatusSchema = z.object({
+  membershipId: z.string().uuid(),
+  operation: z.enum(["suspend", "reactivate", "remove"]),
+  reason: z.string().trim().min(3).max(1000),
+});
+
+export async function changeMembershipStatusAction(formData: FormData) {
+  const context = await getActiveMembershipContext();
+  if (!context.membership) redirect("/account?error=An+active+brokerage+membership+is+required.");
+  const parsed = membershipStatusSchema.safeParse({
+    membershipId: readText(formData, "membershipId"),
+    operation: readText(formData, "operation"),
+    reason: readText(formData, "reason"),
+  });
+  if (!parsed.success) redirect("/broker/agents?section=members&error=Provide+a+reason+for+this+access+change.");
+  const { error } = await context.supabase.from("membership_status_commands").insert({
+    membership_id: parsed.data.membershipId,
+    operation: parsed.data.operation,
+    reason: parsed.data.reason,
+  });
+  if (error) redirect("/broker/agents?section=members&error=The+member+access+could+not+be+updated.");
+  revalidatePath("/broker/agents");
+  const notice = parsed.data.operation === "suspend"
+    ? "Member+access+suspended."
+    : parsed.data.operation === "reactivate"
+      ? "Member+access+restored."
+      : "Member+removed+from+the+brokerage.+Their+CanadaSAP+account+remains+active.";
+  redirect(`/broker/agents?section=members&notice=${notice}`);
 }
 
 export type InvitationActionState = { error?: string; invitationLink?: string };
@@ -190,15 +221,15 @@ export async function departAgentAction(formData: FormData) {
     confirmation: readText(formData, "confirmation"),
   });
   if (!parsed.success) {
-    redirect("/broker/agents?error=Provide+a+reason+and+confirm+the+agent+departure.");
+    redirect("/broker/agents?section=members&error=Provide+a+reason+and+confirm+the+agent+removal.");
   }
 
   const { error } = await context.supabase.from("agent_departure_commands").insert({
     membership_id: parsed.data.membershipId,
     reason: parsed.data.reason,
   });
-  if (error) redirect("/broker/agents?error=The+agent+departure+could+not+be+completed.");
+  if (error) redirect("/broker/agents?section=members&error=The+agent+could+not+be+removed.");
 
   revalidatePath("/broker/agents");
-  redirect("/broker/agents?notice=Agent+brokerage+access+ended.+Their+SteadFast+account+remains+active.");
+  redirect("/broker/agents?section=members&notice=Member+removed+from+the+brokerage.+Their+CanadaSAP+account+remains+active.");
 }
