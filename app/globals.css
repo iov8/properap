@@ -506,7 +506,9 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .remember-device input { accent-color: var(--ink); }
 .text-button { background: none; border: 0; color: var(--lime); cursor: pointer; font-size: 15px; font-weight: 700; padding: 0; }
 .account-hero { background: var(--ink); color: #fff; padding: 72px clamp(28px, 7vw, 104px) 92px; }
-.account-hero.compact { padding-bottom: 70px; padding-top: 54px; }
+.account-hero.compact { border-bottom: 2px solid rgba(255,255,255,.85); padding-bottom: 24px; padding-top: 22px; }
+.account-hero.compact h1 { font-size: clamp(30px, 3vw, 42px); letter-spacing: -.035em; margin: 9px 0 0; }
+.account-hero.compact p { font-size: 15px; margin-top: 8px; }
 .account-hero h1 { color: var(--lime); font-family: Georgia, serif; font-size: clamp(48px, 6vw, 78px); font-weight: 400; letter-spacing: -.055em; margin: 24px 0 12px; }
 .account-hero p { color: rgba(255,255,255,.57); font-family: Georgia, serif; font-size: 17px; margin: 0; }
 .site-builder-hero { padding-bottom: 30px !important; padding-left: clamp(270px, 16vw, 320px) !important; padding-top: 24px !important; }.site-builder-hero .eyebrow, .site-builder-hero h1 { font-size: 15px; }.site-builder-hero .eyebrow { letter-spacing: .08em; text-transform: none; }.site-builder-hero h1 { letter-spacing: 0; margin: 13px 0 0; }
@@ -710,22 +712,31 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .listing-review-history article small { color: #71807c; display: block; font-size: 15px; margin-top: 5px; }
 .listing-review-history article p { color: #52635f; font-size: 15px; line-height: 1.6; margin: 10px 0 0; }
 .review-back { align-items: center; display: inline-flex; min-height: 42px; padding: 0 17px; }
-.notification-shell { margin: -38px auto 0; max-width: 1040px; padding: 0 28px 90px; position: relative; }
-.notification-toolbar { align-items: center; background: var(--ink); color: #fff; display: flex; justify-content: space-between; min-height: 82px; padding: 20px 25px; }
-.notification-toolbar span, .notification-toolbar strong { display: block; }
-.notification-toolbar span { color: var(--lime); font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.notification-toolbar strong { font-family: Georgia, serif; font-size: 20px; font-weight: 400; margin-top: 7px; }
-.notification-toolbar .outline-dark-button { border-color: rgba(255,255,255,.55); color: #fff; min-height: 42px; padding: 0 16px; }
-.notification-list { background: var(--paper); border: 1px solid var(--line); border-top: 0; }
-.notification-list article { align-items: center; border-top: 1px solid var(--line); display: grid; gap: 20px; grid-template-columns: 8px minmax(0, 1fr) auto; padding: 25px; }
-.notification-list article:first-child { border-top: 0; }
+.notification-inbox { background: var(--paper); border: 1px solid var(--line); display: grid; grid-template-columns: 240px minmax(0, 1fr); margin: 30px auto 90px; max-width: 1280px; min-height: 570px; }
+.notification-folders { background: #eef2ef; border-right: 1px solid var(--line); padding: 24px 15px; }
+.notification-folders > strong { color: #63746f; display: block; font-size: 15px; letter-spacing: .08em; margin: 0 10px 14px; text-transform: uppercase; }
+.notification-folders button { align-items: center; background: transparent; border: 0; color: var(--ink); cursor: pointer; display: flex; font: inherit; font-size: 15px; justify-content: space-between; margin: 3px 0; padding: 12px 10px; text-align: left; width: 100%; }
+.notification-folders button:hover, .notification-folders button.active { background: var(--sage); color: var(--ink); }
+.notification-folders button.active { box-shadow: inset 3px 0 0 var(--gold); font-weight: 700; }
+.notification-folders b { background: #fff; border: 1px solid var(--line); border-radius: 999px; font-size: 15px; min-width: 28px; padding: 2px 7px; text-align: center; }
+.notification-mailbox { min-width: 0; }
+.notification-mailbox-toolbar { align-items: center; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; min-height: 82px; padding: 17px 24px; }
+.notification-mailbox-toolbar span, .notification-mailbox-toolbar strong { display: block; }
+.notification-mailbox-toolbar span { color: #63746f; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; }
+.notification-mailbox-toolbar strong { font-family: Georgia, serif; font-size: 22px; font-weight: 400; margin-top: 4px; }
+.notification-search { border-bottom: 1px solid var(--line); display: block; padding: 16px 24px; }
+.notification-search > span { display: block; font-size: 15px; font-weight: 700; letter-spacing: .07em; margin-bottom: 7px; text-transform: uppercase; }
+.notification-search input { background: #fff; border: 1px solid var(--line); font-size: 15px; min-height: 44px; padding: 0 13px; width: min(100%, 520px); }
+.notification-list { background: var(--paper); }
+.notification-list article { align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: 16px; grid-template-columns: 42px minmax(0, 1fr) auto; padding: 20px 24px; }
 .notification-list article.unread { background: #fbfff0; }
-.notification-marker { background: #c2cbc8; border-radius: 50%; height: 8px; width: 8px; }
-.notification-list article.unread .notification-marker { background: var(--gold); box-shadow: 0 0 0 4px rgba(216,167,46,.18); }
-.notification-list article > div:nth-child(2) > span { color: #71807c; font-size: 15px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.notification-list h2 { font-family: Georgia, serif; font-size: 22px; font-weight: 400; margin: 6px 0; }
-.notification-list p { color: #5f706c; font-size: 15px; line-height: 1.6; margin: 0; }
-.notification-list small { color: #889590; display: block; font-size: 15px; margin-top: 9px; }
+.notification-avatar { align-items: center; background: var(--sage); border: 1px solid #c5d1cc; border-radius: 50%; color: var(--ink); display: flex; font-family: Georgia, serif; font-size: 20px; height: 42px; justify-content: center; width: 42px; }
+.notification-list article.unread .notification-avatar { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(216,167,46,.15); }
+.notification-message-heading { align-items: baseline; display: flex; gap: 12px; justify-content: space-between; }
+.notification-message-heading span { color: #52655f; font-size: 15px; font-weight: 700; }
+.notification-message-heading time { color: #778680; font-size: 15px; white-space: nowrap; }
+.notification-list h2 { font-family: Georgia, serif; font-size: 22px; font-weight: 400; margin: 5px 0; }
+.notification-list p { color: #5f706c; font-size: 15px; line-height: 1.55; margin: 0; }
 .notification-actions { align-items: flex-end; display: flex; flex-direction: column; gap: 10px; }
 .notification-actions .solid-button { align-items: center; display: inline-flex; min-height: 40px; padding: 0 15px; }
 .notification-actions .text-button { color: var(--ink); cursor: pointer; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; }
@@ -805,15 +816,20 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
   .account-session-actions { margin-left: auto; padding-left: 16px; }
   .workspace-grid { grid-template-columns: 1fr; padding-left: 16px; padding-right: 16px; }
   .security-layout { padding-left: 16px; padding-right: 16px; }
-  .notification-shell { padding-left: 16px; padding-right: 16px; }
+  .notification-inbox { grid-template-columns: 1fr; margin: 16px 16px 70px; }
+  .notification-folders { border-bottom: 1px solid var(--line); border-right: 0; display: flex; flex-wrap: wrap; gap: 5px; padding: 13px; }
+  .notification-folders > strong { display: none; }
+  .notification-folders button { flex: 1 0 calc(50% - 5px); width: auto; }
+  .notification-mailbox-toolbar { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px; }
+  .notification-search { padding: 14px 16px; }
   .inquiry-shell { padding-left: 16px; padding-right: 16px; }
   .inquiry-toolbar { align-items: flex-start; flex-direction: column; gap: 14px; }
   .inquiry-toolbar p { text-align: left; }
   .inquiry-contact-grid { grid-template-columns: 1fr 1fr; }
   .inquiry-list article > footer { align-items: flex-start; flex-direction: column; }
-  .notification-toolbar { align-items: flex-start; flex-direction: column; gap: 18px; }
-  .notification-list article { align-items: flex-start; grid-template-columns: 8px 1fr; }
+  .notification-list article { align-items: flex-start; grid-template-columns: 42px minmax(0, 1fr); padding: 16px; }
   .notification-actions { align-items: flex-start; grid-column: 2; }
+  .notification-message-heading { align-items: flex-start; flex-direction: column; gap: 3px; }
   .marketplace-heading, .marketplace-layout, .property-search-card-section, .property-map-separator { padding-left: 16px; padding-right: 16px; }
   .marketplace-filters { grid-template-columns: 1fr; }
   .property-card-grid.cards-6, .property-card-grid.cards-4, .professional-card-grid.cards-6, .professional-card-grid.cards-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { AccountHeader } from "@/app/components/account-header";
-import {
-  markAllNotificationsReadAction,
-  markNotificationReadAction,
-} from "@/app/actions/notifications";
+import { NotificationInbox, type InboxNotification } from "@/app/components/notification-inbox";
 import { getActiveMembershipContext } from "@/lib/auth/session";
 import { deriveWorkspaceAccess } from "@/lib/auth/workspace-access";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = {
   title: "Notifications",
@@ -15,12 +12,16 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
-function formatNotificationTime(value: string) {
-  return new Intl.DateTimeFormat("en-JM", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "America/Jamaica",
-  }).format(new Date(value));
+function activityFor(eventType: string, actorName: string | null) {
+  const person = actorName ?? "SteadFast";
+  if (eventType === "listing.draft_created") return `Created by ${person}`;
+  if (eventType === "listing.submitted") return `Submitted by ${person} · Awaiting approval`;
+  if (eventType === "listing.approved") return `Approved by ${person}`;
+  if (eventType === "listing.changes_requested") return `Changes requested by ${person}`;
+  if (eventType === "listing.rejected") return `Rejected by ${person}`;
+  if (eventType === "share.received") return `Shared by ${person}`;
+  if (eventType === "share.removed" || eventType === "share.revoked") return `Updated by ${person}`;
+  return `Updated by ${person}`;
 }
 
 export default async function NotificationsPage() {
@@ -33,10 +34,36 @@ export default async function NotificationsPage() {
   });
   const { data: notifications } = await context.supabase
     .from("notifications")
-    .select("id, event_type, title, body_safe, target_type, target_id, read_at, created_at")
+    .select("id, source_event_id, event_type, title, body_safe, target_type, target_id, read_at, created_at")
     .order("created_at", { ascending: false })
     .limit(100);
-  const unreadCount = notifications?.filter((notification) => !notification.read_at).length ?? 0;
+  const sourceEventIds = (notifications ?? []).map((notification) => notification.source_event_id);
+  const admin = createAdminClient();
+  const { data: sourceEvents } = sourceEventIds.length
+    ? await admin.from("audit_events").select("event_id,action,actor_person_id").in("event_id", sourceEventIds)
+    : { data: [] as Array<{ event_id: string; action: string; actor_person_id: string | null }> };
+  const actorIds = [...new Set((sourceEvents ?? []).flatMap((event) => event.actor_person_id ? [event.actor_person_id] : []))];
+  const { data: actors } = actorIds.length
+    ? await admin.from("people").select("id,display_name").in("id", actorIds)
+    : { data: [] as Array<{ id: string; display_name: string }> };
+  const eventsById = new Map((sourceEvents ?? []).map((event) => [event.event_id, event]));
+  const actorsById = new Map((actors ?? []).map((actor) => [actor.id, actor.display_name]));
+  const inboxNotifications: InboxNotification[] = (notifications ?? []).map((notification) => {
+    const event = eventsById.get(notification.source_event_id);
+    const actorName = event?.actor_person_id ? actorsById.get(event.actor_person_id) ?? null : null;
+    return {
+      id: notification.id,
+      eventType: notification.event_type,
+      title: notification.title,
+      body: notification.body_safe,
+      targetType: notification.target_type,
+      targetId: notification.target_id,
+      readAt: notification.read_at,
+      createdAt: notification.created_at,
+      actorName,
+      activity: activityFor(notification.event_type, actorName),
+    };
+  });
 
   return (
     <main className="account-page">
@@ -49,67 +76,11 @@ export default async function NotificationsPage() {
         canManageInquiries={access.canManageInquiries}
         canShareListings={access.canShareListings}
       />
-      <section className="account-hero compact">
+      <section className="account-hero compact inbox-hero">
         <span className="eyebrow"><i /> Updates for you</span>
         <h1>Notifications.</h1>
-        <p>Brokerage workflow updates are kept here. Opening a listing always checks your current access again.</p>
       </section>
-      <section className="notification-shell">
-        <div className="notification-toolbar">
-          <div>
-            <span>Inbox</span>
-            <strong>{unreadCount} unread</strong>
-          </div>
-          {unreadCount > 0 ? (
-            <form action={markAllNotificationsReadAction}>
-              <button className="outline-dark-button" type="submit">Mark all as read</button>
-            </form>
-          ) : null}
-        </div>
-
-        {notifications?.length ? (
-          <div className="notification-list">
-            {notifications.map((notification) => (
-              <article className={notification.read_at ? "" : "unread"} key={notification.id}>
-                <div className="notification-marker" aria-hidden="true" />
-                <div>
-                  <span>{notification.event_type.replaceAll(".", " · ")}</span>
-                  <h2>{notification.title}</h2>
-                  <p>{notification.body_safe}</p>
-                  <small>{formatNotificationTime(notification.created_at)}</small>
-                </div>
-                <div className="notification-actions">
-                  {notification.target_type === "listing" ? (
-                    <Link className="solid-button" href={`/workspace/listings/${notification.target_id}`}>
-                      Open listing
-                    </Link>
-                  ) : null}
-                  {notification.target_type === "share" ? (
-                    <Link className="solid-button" href="/workspace/sharing">Open sharing</Link>
-                  ) : null}
-                  {notification.target_type === "inquiry" ? (
-                    <Link className="solid-button" href="/workspace/inquiries">
-                      Open inquiry
-                    </Link>
-                  ) : null}
-                  {!notification.read_at ? (
-                    <form action={markNotificationReadAction}>
-                      <input name="notificationId" type="hidden" value={notification.id} />
-                      <button className="text-button" type="submit">Mark read</button>
-                    </form>
-                  ) : <span className="notification-read-state">Read</span>}
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <div className="listing-empty">
-            <span>All clear</span>
-            <h2>No notifications yet.</h2>
-            <p>Listing submissions and brokerage decisions that concern you will appear here.</p>
-          </div>
-        )}
-      </section>
+      <NotificationInbox notifications={inboxNotifications} />
     </main>
   );
 }
