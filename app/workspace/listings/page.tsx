@@ -17,7 +17,6 @@ const LISTING_FILTERS = [
   { key: "all", label: "All listings", states: [] },
   { key: "drafts", label: "Drafts", states: ["draft"] },
   { key: "pending", label: "Pending approval", states: ["pending_initial_approval"] },
-  { key: "approved", label: "Approved", states: ["approved_inactive"] },
   { key: "published", label: "Published", states: ["active", "under_offer"] },
   { key: "unassigned", label: "Unassigned", states: ["unassigned"] },
   { key: "closed", label: "Closed", states: ["withdrawn", "sold", "rented", "expired", "archived"] },
@@ -38,6 +37,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   const context = await getActiveMembershipContext("/workspace/listings");
   if (!context.membership) redirect("/access-denied?reason=brokerage-membership");
   const access = deriveWorkspaceAccess({ hasMembership: true, roles: context.roles, permissions: context.permissions, platformRoles: context.platformRoles });
+  const isBroker = context.roles.includes("broker");
   if (!access.isAgent && !access.canReviewListings) redirect("/access-denied?reason=listing-workspace");
 
   // Listing drafts are intentionally protected from public/RLS projections. The
@@ -52,10 +52,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
   } else {
     listingsQuery = listingsQuery.eq("created_by_person_id", context.person.id);
   }
+  if (!isBroker) listingsQuery = listingsQuery.neq("lifecycle_state", "unassigned");
   const { data: listingRows } = await listingsQuery;
-  const requestedFilter = LISTING_FILTERS.find((filter) => filter.key === params.status) ?? LISTING_FILTERS[0];
+  const visibleFilters = isBroker ? LISTING_FILTERS : LISTING_FILTERS.filter((filter) => filter.key !== "unassigned");
+  const requestedFilter = visibleFilters.find((filter) => filter.key === params.status) ?? visibleFilters[0];
   const filterCounts = new Map<ListingFilterKey, number>();
-  for (const filter of LISTING_FILTERS) {
+  for (const filter of visibleFilters) {
     filterCounts.set(filter.key, filter.key === "all"
       ? (listingRows ?? []).length
       : (listingRows ?? []).filter((listing) => (filter.states as readonly string[]).includes(listing.lifecycle_state)).length);
@@ -94,7 +96,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Pro
       <div className="listing-library-layout">
         <aside className="listing-status-nav" aria-label="Filter listings by status">
           <strong>Listing status</strong>
-          <nav>{LISTING_FILTERS.map((filter) => <Link key={filter.key} href={listingFilterHref(filter.key)} className={requestedFilter.key === filter.key ? "active" : undefined} aria-current={requestedFilter.key === filter.key ? "page" : undefined}><span>{filter.label}</span><small>{filterCounts.get(filter.key) ?? 0}</small></Link>)}</nav>
+          <nav>{visibleFilters.map((filter) => <Link key={filter.key} href={listingFilterHref(filter.key)} className={requestedFilter.key === filter.key ? "active" : undefined} aria-current={requestedFilter.key === filter.key ? "page" : undefined}><span>{filter.label}</span><small>{filterCounts.get(filter.key) ?? 0}</small></Link>)}</nav>
         </aside>
         <section className="listing-library-results" aria-labelledby="listing-results-title">
           <header><div><span>Showing</span><h2 id="listing-results-title">{requestedFilter.label}</h2></div><p>{filteredRows.length} {filteredRows.length === 1 ? "listing" : "listings"}</p></header>
