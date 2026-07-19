@@ -20,10 +20,18 @@ function sharingHref(view: SharingView) {
   return view === "mine" ? "/workspace/sharing" : "/workspace/sharing?view=shared";
 }
 
+function sharingPageHref(view: SharingView, page: number) {
+  const parameters = new URLSearchParams();
+  if (view === "shared") parameters.set("view", "shared");
+  if (page > 1) parameters.set("page", String(page));
+  const query = parameters.toString();
+  return query ? `/workspace/sharing?${query}` : "/workspace/sharing";
+}
+
 export default async function SharingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; notice?: string; view?: string }>;
+  searchParams: Promise<{ error?: string; notice?: string; view?: string; page?: string }>;
 }) {
   const query = await searchParams;
   const selectedView: SharingView = query.view === "shared" ? "shared" : "mine";
@@ -71,6 +79,14 @@ export default async function SharingPage({
     const listing = listingNames.get(share.listing_id);
     return { id: share.id, listingId: share.listing_id, title: listing?.title ?? "Shared listing", listedDate: formatDate(listing?.published_at ?? share.granted_at), ownerName: siteNames.get(share.owner_agent_person_id) ?? "Listing owner" };
   });
+  const pageSize = 5;
+  const activeRecords = selectedView === "mine" ? ownedListings : incomingShares;
+  const totalPages = Math.max(1, Math.ceil(activeRecords.length / pageSize));
+  const requestedPage = Number.parseInt(query.page ?? "1", 10);
+  const currentPage = Math.min(Math.max(Number.isFinite(requestedPage) ? requestedPage : 1, 1), totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const visibleOwnedListings = selectedView === "mine" ? ownedListings.slice(pageStart, pageStart + pageSize) : [];
+  const visibleIncomingShares = selectedView === "shared" ? incomingShares.slice(pageStart, pageStart + pageSize) : [];
 
   return <main className="account-page">
     <AccountHeader displayName={context.person.display_name} hasWorkspace canManageAgents={access.canManageAgents} canManageListings canManageInquiries={access.canManageInquiries} canShareListings />
@@ -89,7 +105,12 @@ export default async function SharingPage({
         <div className="sharing-content">
           <section className="sharing-records" aria-labelledby="sharing-table-title">
             <header><div><span>Display permissions</span><h2 id="sharing-table-title">{selectedView === "mine" ? "My listing" : "Shared with me"}</h2></div><p>{selectedView === "mine" ? ownedListings.length : incomingShares.length} records</p></header>
-            <ListingSharingTables view={selectedView} ownedListings={ownedListings} incomingShares={incomingShares} agents={(sites ?? []).map((site) => ({ id: site.owner_person_id!, name: site.display_name }))} />
+            <ListingSharingTables view={selectedView} ownedListings={visibleOwnedListings} incomingShares={visibleIncomingShares} agents={(sites ?? []).map((site) => ({ id: site.owner_person_id!, name: site.display_name }))} />
+            {totalPages > 1 ? <nav className="listing-pagination" aria-label={`${selectedView === "mine" ? "My listing" : "Shared with me"} pages`}>
+              {currentPage > 1 ? <Link href={sharingPageHref(selectedView, currentPage - 1)}>Previous</Link> : <span>Previous</span>}
+              <strong>Page {currentPage} of {totalPages}</strong>
+              {currentPage < totalPages ? <Link href={sharingPageHref(selectedView, currentPage + 1)}>Next</Link> : <span>Next</span>}
+            </nav> : null}
           </section>
         </div>
       </div>
