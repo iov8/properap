@@ -57,7 +57,7 @@ function wholeNumber(value: string | string[] | null | undefined, maximum = 1_00
 }
 
 function maximumPrice(value: string | string[] | null | undefined) {
-  return firstParameter(value) === "500000000+" ? null : wholeNumber(value);
+  return firstParameter(value).endsWith("+") ? null : wholeNumber(value);
 }
 
 function safeSlug(value: string | string[] | null | undefined) {
