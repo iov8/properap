@@ -744,6 +744,11 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .notification-search > span { display: block; font-size: 15px; font-weight: 700; letter-spacing: .07em; margin-bottom: 7px; text-transform: uppercase; }
 .notification-search input { background: #fff; border: 1px solid var(--line); font-size: 15px; min-height: 44px; padding: 0 13px; width: min(100%, 520px); }
 .notification-list { background: var(--paper); }
+.notification-pagination { align-items: center; border-top: 1px solid var(--line); display: flex; gap: 12px; justify-content: flex-end; padding: 16px 24px; }
+.notification-pagination span { color: #5f706c; font-size: 15px; margin: 0 4px; }
+.notification-pagination button { background: #fff; border: 1px solid var(--ink); color: var(--ink); cursor: pointer; font-size: 15px; font-weight: 700; min-height: 38px; padding: 0 14px; }
+.notification-pagination button:hover:not(:disabled) { background: var(--ink); color: #fff; }
+.notification-pagination button:disabled { border-color: var(--line); color: #9ba7a3; cursor: not-allowed; }
 .notification-list article { align-items: center; border-bottom: 1px solid var(--line); display: grid; gap: 16px; grid-template-columns: 42px minmax(0, 1fr) auto; padding: 20px 24px; }
 .notification-list article.unread { background: #fbfff0; }
 .notification-avatar { align-items: center; background: var(--sage); border: 1px solid #c5d1cc; border-radius: 50%; color: var(--ink); display: flex; font-family: Georgia, serif; font-size: 20px; height: 42px; justify-content: center; width: 42px; }
@@ -849,6 +854,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
   .notification-mailbox-toolbar { align-items: flex-start; flex-direction: column; gap: 12px; padding: 16px; }
   .notification-toolbar-actions { width: 100%; }
   .notification-search { padding: 14px 16px; }
+  .notification-pagination { justify-content: center; padding: 14px 16px; }
   .inquiry-shell { padding-left: 16px; padding-right: 16px; }
   .inquiry-toolbar { align-items: flex-start; flex-direction: column; gap: 14px; }
   .inquiry-toolbar p { text-align: left; }

@@ -25,6 +25,7 @@ export type InboxNotification = {
 };
 
 type Filter = "all" | "unread" | "starred" | "listing" | "approval";
+const PAGE_SIZE = 10;
 
 function formatNotificationTime(value: string) {
   return new Intl.DateTimeFormat("en-JM", {
@@ -41,6 +42,7 @@ function isApproval(eventType: string) {
 export function NotificationInbox({ notifications }: { notifications: InboxNotification[] }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [deleteCandidateId, setDeleteCandidateId] = useState<string | null>(null);
   const unreadCount = notifications.filter((notification) => !notification.readAt).length;
   const filtered = useMemo(() => {
@@ -63,9 +65,15 @@ export function NotificationInbox({ notifications }: { notifications: InboxNotif
     { key: "listing", label: "Listing activity", count: notifications.filter((notification) => notification.targetType === "listing").length },
     { key: "approval", label: "Approvals", count: notifications.filter((notification) => isApproval(notification.eventType)).length },
   ];
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedNotifications = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const firstVisible = filtered.length ? ((currentPage - 1) * PAGE_SIZE) + 1 : 0;
+  const lastVisible = Math.min(currentPage * PAGE_SIZE, filtered.length);
   const clearFilters = () => {
     setFilter("all");
     setSearch("");
+    setPage(1);
   };
   const hasActiveFilters = filter !== "all" || Boolean(search.trim());
 
@@ -74,7 +82,7 @@ export function NotificationInbox({ notifications }: { notifications: InboxNotif
       <aside className="notification-folders" aria-label="Notification folders">
         <strong>Mailboxes</strong>
         {filters.map((item) => (
-          <button key={item.key} type="button" className={filter === item.key ? "active" : ""} onClick={() => setFilter(item.key)}>
+          <button key={item.key} type="button" className={filter === item.key ? "active" : ""} onClick={() => { setFilter(item.key); setPage(1); }}>
             <span>{item.label}</span><b>{item.count}</b>
           </button>
         ))}
@@ -83,7 +91,7 @@ export function NotificationInbox({ notifications }: { notifications: InboxNotif
         <div className="notification-mailbox-toolbar">
           <div>
             <span>{filter === "all" ? "Inbox" : filters.find((item) => item.key === filter)?.label}</span>
-            <strong>{filtered.length} message{filtered.length === 1 ? "" : "s"}</strong>
+          <strong>{filtered.length ? `${firstVisible}–${lastVisible} of ${filtered.length}` : "0"} message{filtered.length === 1 ? "" : "s"}</strong>
           </div>
           <div className="notification-toolbar-actions">
             {hasActiveFilters ? <button className="text-button notification-clear-filter" onClick={clearFilters} type="button">Clear filters</button> : null}
@@ -92,10 +100,10 @@ export function NotificationInbox({ notifications }: { notifications: InboxNotif
         </div>
         <label className="notification-search">
           <span>Search notifications</span>
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search title or user" type="search" />
+          <input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search title or user" type="search" />
         </label>
         {filtered.length ? <div className="notification-list">
-          {filtered.map((notification) => (
+          {pagedNotifications.map((notification) => (
             <article className={notification.readAt ? "" : "unread"} key={notification.id}>
               <div className="notification-avatar" aria-hidden="true">{(notification.actorName ?? "S").slice(0, 1).toUpperCase()}</div>
               <div className="notification-message">
@@ -122,6 +130,11 @@ export function NotificationInbox({ notifications }: { notifications: InboxNotif
               </div>
             </article>
           ))}
+          {pageCount > 1 ? <nav aria-label="Notification pages" className="notification-pagination">
+            <button disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))} type="button">Previous</button>
+            <span>Page {currentPage} of {pageCount}</span>
+            <button disabled={currentPage === pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))} type="button">Next</button>
+          </nav> : null}
         </div> : <div className="listing-empty"><span>Inbox</span><h2>No matching notifications.</h2><p>Try a different search or folder.</p></div>}
       </div>
     </section>
