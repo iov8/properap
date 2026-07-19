@@ -10,6 +10,7 @@ import { StructuredData } from "@/app/components/structured-data";
 import { StatusMessage } from "@/app/components/status-message";
 import { createInquiryAction } from "@/app/actions/inquiries";
 import { publicPageMetadata, STEADFAST_SITE_URL } from "@/lib/seo/metadata";
+import { CurrencyPrice } from "@/app/components/currency-price";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,6 @@ export default async function PublicListingPage({ params, searchParams }: RouteP
   const listing = await getPublicListing((await params).listingId);
   if (!listing) notFound();
   const query = await searchParams;
-  const price = new Intl.NumberFormat("en-JM", { style: "currency", currency: listing.currency, maximumFractionDigits: 0 }).format(listing.price);
   const location = listing.public_location_label ?? listing.administrative_area_name;
   const hasPublicMapPoint = listing.public_latitude !== null && listing.public_longitude !== null;
   const latitude = Number(listing.public_latitude);
@@ -59,6 +59,11 @@ export default async function PublicListingPage({ params, searchParams }: RouteP
     .eq("approved_version_id", listing.approved_version_id)
     .eq("variant", "gallery")
     .order("position");
+  const { data: exchangeRates } = await supabase.from("exchange_rate_snapshots")
+    .select("jmd_per_usd,cad_per_usd,gbp_per_usd,provider_updated_at")
+    .order("fetched_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
   let sourceSite: { id: string; site_type: string; owner_person_id: string | null; display_name: string } | null = null;
   let displayingAgent: { id: string; name: string } | null = null;
   if (query?.site && z.string().uuid().safeParse(query.site).success) {
@@ -87,7 +92,7 @@ export default async function PublicListingPage({ params, searchParams }: RouteP
     <header className="site-header search-header"><BrandLogo /><Link className="outline-button" href="/properties">Back to search</Link></header>
     <section className="public-listing-hero">
       <div><span>{listing.purpose === "sale" ? "For sale" : "Long-term rental"} · {listing.lifecycle_state.replaceAll("_", " ")}</span><h1>{listing.title}</h1><p>{location}</p></div>
-      <strong>{price}{listing.price_period ? <small> / {listing.price_period}</small> : null}</strong>
+      {listing.currency === "JMD" ? <CurrencyPrice priceJmd={Number(listing.price)} pricePeriod={listing.price_period} rates={exchangeRates} /> : <strong>{new Intl.NumberFormat("en-JM", { style: "currency", currency: listing.currency, maximumFractionDigits: 0 }).format(listing.price)}{listing.price_period ? <small> / {listing.price_period}</small> : null}</strong>}
     </section>
     <div className="public-listing-layout">
       <div className="public-listing-main">
