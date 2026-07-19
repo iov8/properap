@@ -148,7 +148,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .marketplace-heading { display: grid; gap: 30px; margin: 0 auto; max-width: 1480px; padding: 58px 32px 34px; }
 .marketplace-heading h1 { font-family: Georgia, serif; font-size: clamp(46px, 6vw, 78px); font-weight: 400; letter-spacing: -.05em; margin: 24px 0 12px; }
 .marketplace-heading > div > p { color: #657572; font-size: 15px; }
-.marketplace-filters { align-items: start; background: var(--paper); border: 1px solid var(--line); display: grid; gap: 12px; grid-template-columns: 1.15fr .9fr .75fr 1fr minmax(255px, 1.55fr) .65fr 1fr auto; padding: 18px; width: 100%; }
+.marketplace-filters { align-items: start; background: var(--paper); border: 1px solid var(--line); display: grid; gap: 12px; grid-template-columns: 1.15fr .8fr .75fr .95fr .65fr .9fr .9fr .65fr .95fr auto; padding: 18px; width: 100%; }
 .marketplace-filters label { align-self: start; display: grid; gap: 7px; }
 .marketplace-filters label > span { block-size: auto; color: #687774; display: block; font-size: 15px; font-weight: 700; letter-spacing: .06em; line-height: 1.2; min-height: 18px; text-transform: uppercase; }
 .marketplace-filters input, .marketplace-filters select { border: 1px solid var(--line); min-height: 45px; padding: 0 12px; width: 100%; }
@@ -891,7 +891,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .home-search-hero > span, .home-section-heading > span, .public-information-hero > span { color: var(--gold); font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
 .home-search-hero h1 { font-family: Georgia, serif; font-size: clamp(45px, 7vw, 78px); font-weight: 400; letter-spacing: -.05em; margin: 14px 0; }
 .home-search-hero p { color: rgba(255,255,255,.78); font-size: 17px; line-height: 1.6; margin: 0 auto 30px; max-width: 670px; }
-.home-search { align-items: end; background: #fff; border: 1px solid rgba(255,255,255,.3); box-shadow: 0 22px 60px rgba(0,0,0,.22); color: var(--charcoal); display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr) auto auto; margin: 0 auto; max-width: 860px; padding: 14px; text-align: left; }
+.home-search { align-items: end; background: #fff; border: 1px solid rgba(255,255,255,.3); box-shadow: 0 22px 60px rgba(0,0,0,.22); color: var(--charcoal); display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 auto; max-width: 960px; padding: 14px; text-align: left; }
 .home-search > label { display: grid; gap: 7px; }
 .home-search label > span { color: #667570; font-size: 15px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .home-search select { border: 1px solid var(--sand); min-height: 46px; padding: 0 12px; }

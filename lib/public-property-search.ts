@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { convertCurrencyToJmd, isDisplayCurrency, type DisplayCurrency, type ExchangeRateSnapshot } from "@/lib/currency-conversions";
 
 export type PropertySearchParams = {
   location: string;
@@ -11,6 +12,7 @@ export type PropertySearchParams = {
   intent: "buy" | "rent" | "vacation";
   brokerageSlug: string;
   agentSlug: string;
+  displayCurrency: DisplayCurrency;
 };
 
 export type PublicListing = {
@@ -63,6 +65,7 @@ function safeSlug(value: string | string[] | null | undefined) {
 }
 
 export function parsePropertySearchParams(params: Record<string, string | string[] | undefined>): PropertySearchParams {
+  const requestedCurrency = firstParameter(params.currency);
   return {
     location: safeSearchWords(params.location),
     requestedType: firstParameter(params.type).toLowerCase().slice(0, 30),
@@ -74,10 +77,18 @@ export function parsePropertySearchParams(params: Record<string, string | string
     intent: firstParameter(params.intent) === "rent" ? "rent" : firstParameter(params.intent) === "vacation" ? "vacation" : "buy",
     brokerageSlug: safeSlug(params.brokerage),
     agentSlug: safeSlug(params.agent),
+    displayCurrency: isDisplayCurrency(requestedCurrency) ? requestedCurrency : "JMD",
   };
 }
 
-export async function searchPublicListings(supabase: SupabaseClient, filters: PropertySearchParams) {
+export function jmdPriceFilters(filters: PropertySearchParams, rates: ExchangeRateSnapshot | null) {
+  return {
+    minPrice: filters.minPrice === null ? null : Math.round(convertCurrencyToJmd(filters.minPrice, filters.displayCurrency, rates)),
+    maxPrice: filters.maxPrice === null ? null : Math.round(convertCurrencyToJmd(filters.maxPrice, filters.displayCurrency, rates)),
+  };
+}
+
+export async function searchPublicListings(supabase: SupabaseClient, filters: PropertySearchParams, rates: ExchangeRateSnapshot | null = null) {
   let query = supabase
     .from("public_listing_snapshots")
     .select("listing_id,lifecycle_state,purpose,property_type,property_subtype,currency,price,price_period,title,description,bedrooms,bathrooms,building_area,land_area,administrative_area_name,public_location_label,public_latitude,public_longitude,brokerage_name,assigned_agent_name,ready_media_count")
@@ -90,8 +101,9 @@ export async function searchPublicListings(supabase: SupabaseClient, filters: Pr
   else if (["house", "apartment", "townhouse"].includes(filters.requestedType)) query = query.eq("property_type", "residential").ilike("property_subtype", filters.requestedType);
   if (filters.category === "residential") query = query.eq("property_type", "residential");
   if (filters.category === "commercial") query = query.eq("property_type", "commercial");
-  if (filters.minPrice !== null) query = query.gte("price", filters.minPrice);
-  if (filters.maxPrice !== null) query = query.lte("price", filters.maxPrice);
+  const jmdPrices = jmdPriceFilters(filters, rates);
+  if (jmdPrices.minPrice !== null) query = query.gte("price", jmdPrices.minPrice);
+  if (jmdPrices.maxPrice !== null) query = query.lte("price", jmdPrices.maxPrice);
   if (filters.minimumBeds !== null) query = query.gte("bedrooms", filters.minimumBeds);
   if (filters.minimumSize !== null) query = query.gte("building_area", filters.minimumSize);
   if (filters.brokerageSlug) query = query.eq("brokerage_slug", filters.brokerageSlug);

@@ -22,13 +22,14 @@ export default async function Properties({ searchParams }: { searchParams: Searc
   const cardsPerRow = (Array.isArray(params.view) ? params.view[0] : params.view) === "4" ? 4 : 6;
   const supabase = await createClient();
   const { data: authData } = await supabase.auth.getUser();
-  const [{ listings, covers }, locationOptions] = await Promise.all([searchPublicListings(supabase, filters), getPublicLocationOptions(supabase, filters)]);
+  const { data: rates } = await supabase.from("exchange_rate_snapshots").select("jmd_per_usd,cad_per_usd,gbp_per_usd,provider_updated_at").order("fetched_at", { ascending: false }).limit(1).maybeSingle();
+  const [{ listings, covers }, locationOptions] = await Promise.all([searchPublicListings(supabase, filters, rates), getPublicLocationOptions(supabase, filters)]);
 
   return (
     <main className="search-page">
       <PublicHeader />
 
-      <PropertySearchResults initialListings={listings} initialCovers={covers} initialFilters={filters} initialCardsPerRow={cardsPerRow} locationOptions={locationOptions} />
+      <PropertySearchResults initialListings={listings} initialCovers={covers} initialFilters={filters} initialCardsPerRow={cardsPerRow} locationOptions={locationOptions} rates={rates} />
       <PublicFooter />
     </main>
   );

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import type { ListingCover, PropertySearchParams, PublicListing } from "@/lib/public-property-search";
 import { JamaicaListingMap } from "./jamaica-listing-map";
+import { CurrencyPriceRangeFields } from "@/app/components/currency-price-range-fields";
+import type { ExchangeRateSnapshot } from "@/lib/currency-conversions";
 
 const PRICE_OPTIONS = [0, 1_000_000, 5_000_000, 10_000_000, 25_000_000, 50_000_000, 100_000_000, 250_000_000, 500_000_000];
 const SIZE_OPTIONS = [500, 1_000, 1_500, 2_000, 3_000, 5_000];
@@ -15,6 +17,7 @@ type Props = {
   initialFilters: PropertySearchParams;
   initialCardsPerRow: 4 | 6;
   locationOptions: string[];
+  rates: ExchangeRateSnapshot | null;
 };
 
 function formatPrice(listing: PublicListing) {
@@ -45,7 +48,7 @@ function PropertyCard({ listing, cover }: { listing: PublicListing; cover?: List
   </article>;
 }
 
-export function PropertySearchResults({ initialListings, initialCovers, initialFilters, initialCardsPerRow, locationOptions }: Props) {
+export function PropertySearchResults({ initialListings, initialCovers, initialFilters, initialCardsPerRow, locationOptions, rates }: Props) {
   const [listings, setListings] = useState(initialListings);
   const [covers, setCovers] = useState(initialCovers);
   const [cardsPerRow, setCardsPerRow] = useState<4 | 6>(initialCardsPerRow);
@@ -103,7 +106,7 @@ export function PropertySearchResults({ initialListings, initialCovers, initialF
         <label><span>Looking for</span><select name="intent" defaultValue={initialFilters.intent}><option value="buy">Buy</option><option value="rent">Rent</option><option value="vacation">Vacation rental</option></select></label>
         <label><span>Use</span><select name="category" defaultValue={initialFilters.category}><option value="">Any use</option><option value="residential">Residential</option><option value="commercial">Commercial</option></select></label>
         <label><span>Property type</span><select name="type" defaultValue={initialFilters.requestedType}><option value="">Any property</option><option value="house">House</option><option value="apartment">Apartment</option><option value="townhouse">Townhouse</option><option value="land">Land</option><option value="commercial">Commercial</option><option value="development">Development</option></select></label>
-        <fieldset className="filter-range"><legend>Price range</legend><select name="minPrice" defaultValue={initialFilters.minPrice ?? 0}>{PRICE_OPTIONS.map((amount) => <option key={amount} value={amount}>{amount === 0 ? "J$0" : amount === 500_000_000 ? "J$500M+" : formatJmdCompact(amount)}</option>)}</select><span>to</span><select name="maxPrice" defaultValue={initialFilters.maxPrice ?? "500000000+"}>{PRICE_OPTIONS.slice(1, -1).map((amount) => <option key={amount} value={amount}>{formatJmdCompact(amount)}</option>)}<option value="500000000+">J$500M+</option></select></fieldset>
+        <CurrencyPriceRangeFields rates={rates} initialCurrency={initialFilters.displayCurrency} />
         <label><span>Bedrooms</span><select name="beds" defaultValue={initialFilters.minimumBeds ?? ""}><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label>
         <label><span>Building size</span><select name="minSize" defaultValue={initialFilters.minimumSize ?? ""}><option value="">Any building size</option>{SIZE_OPTIONS.map((size) => <option key={size} value={size}>{new Intl.NumberFormat("en-JM").format(size)}+ sq ft</option>)}</select></label>
         <button className="solid-button" type="submit" disabled={isLoading}>{isLoading ? "Searching…" : "Search"}</button>
