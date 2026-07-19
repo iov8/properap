@@ -320,6 +320,32 @@ export async function selectListingCoverMediaAction(
   return { coverMediaId: parsed.data.mediaId };
 }
 
+const removeListingMediaSchema = z.object({
+  listingId: z.string().uuid(),
+  mediaId: z.string().uuid(),
+});
+
+export type RemoveListingMediaState = { error?: string; removedMediaId?: string };
+
+export async function removeListingMediaAction(
+  _previousState: RemoveListingMediaState,
+  formData: FormData,
+): Promise<RemoveListingMediaState> {
+  const parsed = removeListingMediaSchema.safeParse({
+    listingId: readText(formData, "listingId"),
+    mediaId: readText(formData, "mediaId"),
+  });
+  if (!parsed.success) return { error: "The selected image is invalid." };
+  const context = await getActiveMembershipContext(`/workspace/listings/${parsed.data.listingId}`);
+  if (!context.membership) return { error: "You no longer have listing access." };
+  const { error } = await context.supabase.from("remove_listing_media_commands").insert({
+    request_id: randomUUID(), listing_id: parsed.data.listingId, media_id: parsed.data.mediaId,
+  });
+  if (error) return { error: "This image could not be removed. Only the current editable draft can be changed." };
+  revalidatePath(`/workspace/listings/${parsed.data.listingId}`);
+  return { removedMediaId: parsed.data.mediaId };
+}
+
 type AdminClient = ReturnType<typeof createAdminClient>;
 
 async function rejectMedia(

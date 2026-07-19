@@ -1,10 +1,12 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   authorizeListingMediaUploadAction,
   finalizeListingMediaUploadAction,
+  removeListingMediaAction,
+  type RemoveListingMediaState,
   selectListingCoverMediaAction,
   type SelectListingCoverMediaState,
 } from "@/app/actions/listings";
@@ -39,8 +41,15 @@ export function ListingMediaUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<UploadState>({ kind: "idle", message: "No files are being uploaded." });
   const [coverState, coverAction, coverPending] = useActionState<SelectListingCoverMediaState, FormData>(selectListingCoverMediaAction, {});
+  const [removeState, removeAction, removePending] = useActionState<RemoveListingMediaState, FormData>(removeListingMediaAction, {});
+  const [removedMediaIds, setRemovedMediaIds] = useState<string[]>([]);
   const uploading = state.kind === "uploading";
   const selectedCoverId = coverState.coverMediaId ?? coverMediaId ?? images[0]?.id;
+  const visibleImages = images.filter((image) => !removedMediaIds.includes(image.id));
+
+  useEffect(() => {
+    if (removeState.removedMediaId) setRemovedMediaIds((ids) => ids.includes(removeState.removedMediaId!) ? ids : [...ids, removeState.removedMediaId!]);
+  }, [removeState.removedMediaId]);
 
   async function uploadSelected(files: FileList | null) {
     if (!files?.length) return;
@@ -117,7 +126,7 @@ export function ListingMediaUploader({
         <strong>{images.length} / {MAX_LISTING_IMAGES}</strong>
       </div>
 
-      {images.length ? <><p className="listing-cover-help">Choose the photo visitors see first on property cards. You can change it any time before submitting this draft.</p>{coverState.error ? <p className="inline-form-error" role="alert">{coverState.error}</p> : null}<div className="approval-image-previews">{images.map((image, index) => (
+      {visibleImages.length ? <><p className="listing-cover-help">Choose the photo visitors see first on property cards. Use × to remove a photo from this draft. Removed photos remain in prior approved versions and the audit history.</p>{coverState.error || removeState.error ? <p className="inline-form-error" role="alert">{coverState.error ?? removeState.error}</p> : null}<div className="approval-image-previews">{visibleImages.map((image, index) => (
         <figure key={image.id}>
           {/* Signed, short-lived private URL generated only after listing authorization. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -127,6 +136,11 @@ export function ListingMediaUploader({
             <input type="hidden" name="listingId" value={listingId} />
             <input type="hidden" name="mediaId" value={image.id} />
             <button className={image.id === selectedCoverId ? "cover-photo-button active" : "cover-photo-button"} type="submit" disabled={coverPending || image.id === selectedCoverId}>{coverPending && image.id !== selectedCoverId ? "Saving…" : image.id === selectedCoverId ? "Main card photo" : "Set as main card photo"}</button>
+          </form>
+          <form action={removeAction} data-prompt-title="Remove this property photo?" data-prompt-message="This removes the photo from the editable draft. It does not erase retained approved versions or their audit history." data-prompt-confirm="Remove photo" data-prompt-variant="danger">
+            <input type="hidden" name="listingId" value={listingId} />
+            <input type="hidden" name="mediaId" value={image.id} />
+            <button className="listing-media-remove" type="submit" aria-label={`Remove property image ${index + 1}`} disabled={removePending}>×</button>
           </form>
         </figure>
       ))}</div></> : <div className="listing-media-empty"><strong>No property images yet</strong><p>Add bright, accurate photographs. Avoid people, identity documents, vehicle plates, or other unnecessary personal information.</p></div>}
