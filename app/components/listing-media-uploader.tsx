@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   authorizeListingMediaUploadAction,
@@ -41,12 +41,6 @@ export function ListingMediaUploader({
   const [coverState, coverAction, coverPending] = useActionState<SelectListingCoverMediaState, FormData>(selectListingCoverMediaAction, {});
   const uploading = state.kind === "uploading";
   const selectedCoverId = coverState.coverMediaId ?? coverMediaId ?? images[0]?.id;
-
-  useEffect(() => {
-    if (coverState.coverMediaId) {
-      router.refresh();
-    }
-  }, [coverState.coverMediaId, router]);
 
   async function uploadSelected(files: FileList | null) {
     if (!files?.length) return;
