@@ -20,6 +20,7 @@ const ACCEPTED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 export function CreateListingForm({ parishes, returnTo }: { parishes: Parish[]; returnTo?: string }) {
   const router = useRouter();
   const uploadStartedFor = useRef<string | null>(null);
+  const selectedImageFilesRef = useRef<File[]>([]);
   const [purpose, setPurpose] = useState("sale");
   const [propertyType, setPropertyType] = useState("residential");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -32,15 +33,18 @@ export function CreateListingForm({ parishes, returnTo }: { parishes: Parish[]; 
     const images = Array.from(files ?? []);
     if (!images.length) return;
     if (images.length > MAX_LISTING_IMAGES) {
+      selectedImageFilesRef.current = [];
       setSelectedImages([]);
       setUploadState({ kind: "error", message: `Choose up to ${MAX_LISTING_IMAGES} images for one listing.` });
       return;
     }
     if (images.some((file) => !ACCEPTED_TYPES.has(file.type) || file.size < 1 || file.size > MAX_IMAGE_BYTES)) {
+      selectedImageFilesRef.current = [];
       setSelectedImages([]);
       setUploadState({ kind: "error", message: "Choose JPEG, PNG, or WebP images no larger than 15 MB each." });
       return;
     }
+    selectedImageFilesRef.current = images;
     setSelectedImages(images);
     setUploadState({ kind: "idle", message: `${images.length} image${images.length === 1 ? "" : "s"} ready. They will be compressed to full-HD before upload.` });
   }
@@ -50,7 +54,8 @@ export function CreateListingForm({ parishes, returnTo }: { parishes: Parish[]; 
     uploadStartedFor.current = state.listingId;
 
     const destination = `/workspace/listings/${state.listingId}`;
-    if (!selectedImages.length) {
+    const filesToUpload = selectedImageFilesRef.current;
+    if (!filesToUpload.length) {
       router.push(`${destination}?notice=Private+draft+created.`);
       return;
     }
@@ -58,8 +63,8 @@ export function CreateListingForm({ parishes, returnTo }: { parishes: Parish[]; 
     void (async () => {
       const supabase = createClient();
       let completed = 0;
-      for (const sourceFile of selectedImages) {
-        setUploadState({ kind: "uploading", message: `Compressing image ${completed + 1} of ${selectedImages.length} to full-HD…` });
+      for (const sourceFile of filesToUpload) {
+        setUploadState({ kind: "uploading", message: `Compressing image ${completed + 1} of ${filesToUpload.length} to full-HD…` });
         let image: File;
         try {
           image = await compressListingImage(sourceFile);
@@ -67,7 +72,7 @@ export function CreateListingForm({ parishes, returnTo }: { parishes: Parish[]; 
           router.push(`/workspace/listings/${state.listingId}?error=An+image+could+not+be+compressed.+Choose+a+different+file.`);
           return;
         }
-        setUploadState({ kind: "uploading", message: `Securely uploading image ${completed + 1} of ${selectedImages.length}…` });
+        setUploadState({ kind: "uploading", message: `Securely uploading image ${completed + 1} of ${filesToUpload.length}…` });
         const authorization = await authorizeListingMediaUploadAction({ listingId: state.listingId, filename: image.name, mimeType: image.type, byteSize: image.size });
         if (authorization.status !== "authorized") {
           router.push(`/workspace/listings/${state.listingId}?error=${encodeURIComponent(authorization.error)}`);
@@ -85,9 +90,10 @@ export function CreateListingForm({ parishes, returnTo }: { parishes: Parish[]; 
         }
         completed += 1;
       }
+      selectedImageFilesRef.current = [];
       router.push(`${destination}?notice=${encodeURIComponent(`Private draft created with ${completed} validated image${completed === 1 ? "" : "s"}.`)}`);
     })();
-  }, [router, selectedImages, state.listingId, state.returnTo]);
+  }, [router, state.listingId, state.returnTo]);
 
   return (
     <form action={formAction} className="listing-wizard" data-prompt-title="Create this private draft?" data-prompt-message="SteadFast will save the draft, compress selected property photos to full-HD, strip metadata, and securely upload them for brokerage review." data-prompt-confirm="Create draft">

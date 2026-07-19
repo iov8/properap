@@ -99,7 +99,9 @@ export async function createListingDraftAction(
 
   revalidatePath("/workspace");
   revalidatePath("/workspace/listings");
-  revalidatePath("/workspace/site");
+  // Do not revalidate the website-builder route here. A create request may
+  // carry selected File objects in its client component; refreshing that route
+  // before its post-create upload effect runs would discard those files.
   return { listingId, returnTo };
 }
 
