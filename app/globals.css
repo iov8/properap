@@ -44,9 +44,9 @@ button, a.outline-button, a.solid-button, a.danger-button, a.outline-dark-button
   justify-content: space-between;
   padding: 0 clamp(24px, 5vw, 76px);
 }
-.brand-logo { align-items: center; background: transparent; border: 0; display: flex; flex: 0 0 auto; height: 86px; justify-content: center; width: 198px; }
+.brand-logo { align-items: center; background: transparent; border: 0; display: flex; flex: 0 0 auto; height: 86px; justify-content: center; width: 86px; }
 .brand-logo img { display: block; filter: drop-shadow(0 1px 1px rgba(0,0,0,.18)); height: 100%; object-fit: contain; width: 100%; }
-.brand-logo.compact { height: 54px; width: 90px; }
+.brand-logo.compact { height: 54px; width: 54px; }
 .desktop-nav { display: flex; gap: 34px; margin-left: auto; margin-right: auto; }
 .desktop-nav a { color: rgba(255,255,255,.78); font-size: 15px; transition: color .2s; }
 .desktop-nav a:hover { color: #fff; }
@@ -968,8 +968,8 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 
 @media (max-width: 620px) {
   .site-header { height: 82px; }
-  .brand-logo { height: 68px; width: 154px; }
-  .brand-logo.compact { height: 50px; width: 82px; }
+  .brand-logo { height: 68px; width: 68px; }
+  .brand-logo.compact { height: 50px; width: 50px; }
   .header-actions .outline-button { display: none; }
   .hero h1 { font-size: 64px; }
   .property-search { grid-template-columns: 1fr 58px; }
@@ -998,7 +998,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .demo-listing-notice a { color: var(--evergreen); font-weight: 700; text-decoration: underline; }
 
 .public-header { align-items: center; background: var(--evergreen); color: #fff; display: flex; gap: 22px; min-height: 60px; padding: 0 clamp(20px, 4vw, 64px); }
-.public-header .brand-logo { height: 54px; width: 136px; }
+.public-header .brand-logo { height: 58px; width: 58px; }
 .public-header nav { align-items: center; display: flex; flex: 1; gap: clamp(12px, 1.7vw, 25px); justify-content: center; }
 .public-header nav a { color: rgba(255,255,255,.84); font-size: 15px; white-space: nowrap; }
 .public-header nav a:hover { color: var(--gold); }
