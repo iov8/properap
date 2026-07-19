@@ -1041,7 +1041,8 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .home-recommendation-card:hover, .home-recommendation-card:focus-visible { border-color: var(--gold); box-shadow: 0 14px 30px rgba(16,44,42,.12); outline: none; transform: translateY(-3px); }
 .home-agent-photo, .home-broker-logo { align-items: center; aspect-ratio: 1 / .72; background: var(--sage); display: flex; justify-content: center; overflow: hidden; }
 .home-agent-photo { aspect-ratio: 1 / 1; }
-.home-agent-photo img, .home-broker-logo img { height: 100%; object-fit: cover; width: 100%; }
+.home-agent-photo img { height: 100%; object-fit: cover; width: 100%; }
+.home-broker-logo img { background: #fff; box-sizing: border-box; height: 100%; object-fit: contain; padding: 12px; width: 100%; }
 .home-agent-photo span, .home-broker-logo span { color: var(--evergreen); font-family: Georgia, serif; font-size: 36px; }
 .home-recommendation-card strong { display: block; font-size: 16px; margin-top: 14px; }
 .home-recommendation-card small { color: #61716e; display: block; font-size: 15px; line-height: 1.4; margin: 6px auto 2px; max-width: 230px; }
