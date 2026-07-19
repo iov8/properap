@@ -90,7 +90,7 @@ export default async function SharingPage({
 
   return <main className="account-page">
     <AccountHeader displayName={context.person.display_name} hasWorkspace canManageAgents={access.canManageAgents} canManageListings canManageInquiries={access.canManageInquiries} canShareListings />
-    <section className="account-hero compact"><span className="eyebrow"><i /> Display advertising</span><h1>Listing sharing.</h1><p>Share approved listings without changing ownership or editing rights.</p></section>
+    <section className="account-hero compact"><span className="eyebrow"><i /> Display advertising</span><h1>Listing sharing</h1><p>Share approved listings without changing ownership or editing rights.</p></section>
     <section className="sharing-shell">
       <StatusMessage error={query.error} notice={query.notice} />
       <div className="sharing-layout">
