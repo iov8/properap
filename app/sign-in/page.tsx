@@ -25,9 +25,7 @@ export default async function SignInPage({
     <main className="auth-page">
       <section className="auth-intro">
         <BrandLogo />
-        <span className="eyebrow"><i /> Professional access</span>
         <h1>Welcome<br />back.</h1>
-        <p>Manage your account, applications, listings, and brokerage work from one clear workspace.</p>
       </section>
       <section className="auth-card">
         <div>
