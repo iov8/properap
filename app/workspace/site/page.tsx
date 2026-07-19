@@ -47,7 +47,7 @@ export default async function SiteBuilderPage({
       (canEditBrokerageWebsite &&
         site.owner_brokerage_id === context.membership?.brokerage_id),
   );
-  const [testimonialResult, assetResult, listingResult, shareResult, parishResult] =
+  const [testimonialResult, assetResult, listingResult, privateListingResult, shareResult, parishResult] =
     sites.length
       ? await Promise.all([
           context.supabase
@@ -75,6 +75,11 @@ export default async function SiteBuilderPage({
               "listing_id,title,purpose,price,currency,brokerage_id,assigned_agent_person_id,published_at",
             )
             .order("published_at", { ascending: false }),
+          context.supabase
+            .from("listings")
+            .select("id,brokerage_id,created_by_person_id,lifecycle_state,updated_at,listing_versions(version_number,revision_state,title,purpose,price,currency)")
+            .in("lifecycle_state", ["draft", "pending_initial_approval", "approved_inactive", "under_offer"])
+            .order("updated_at", { ascending: false }),
           admin
             .from("listing_shares")
             .select("listing_id,displaying_agent_person_id")
@@ -85,9 +90,16 @@ export default async function SiteBuilderPage({
             .eq("area_type", "parish")
             .order("name"),
         ])
-      : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
+      : [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
   const testimonials = testimonialResult.data ?? [];
   const assets = assetResult.data ?? [];
+  const privateListings = (privateListingResult.data ?? []).flatMap((listing) => {
+    const versions = (listing.listing_versions as unknown as Array<{ version_number: number; revision_state: string; title: string; purpose: string; price: number; currency: string }> | null) ?? [];
+    const version = [...versions].sort((left, right) => right.version_number - left.version_number)[0];
+    return version ? [{ listing_id: listing.id, title: version.title, purpose: version.purpose, price: version.price, currency: version.currency, brokerage_id: listing.brokerage_id, assigned_agent_person_id: listing.created_by_person_id, published_at: listing.updated_at, lifecycle_state: listing.lifecycle_state, revision_state: version.revision_state }] : [];
+  });
+  const publishedListings = (listingResult.data ?? []).map((listing) => ({ ...listing, lifecycle_state: "active", revision_state: "approved" }));
+  const builderListings = [...privateListings, ...publishedListings].sort((left, right) => new Date(right.published_at).getTime() - new Date(left.published_at).getTime());
   return (
     <main className="account-page">
       <StatusMessage error={query.error} notice={query.notice} />
@@ -112,7 +124,7 @@ export default async function SiteBuilderPage({
             sites={sites}
             testimonials={testimonials}
           assets={assets}
-          listings={listingResult.data ?? []}
+          listings={builderListings}
           shares={shareResult.data ?? []}
             parishes={parishResult.data ?? []}
             canCreateListings={access.isAgent}

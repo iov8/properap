@@ -69,6 +69,8 @@ type Listing = {
   brokerage_id: string;
   assigned_agent_person_id: string;
   published_at: string;
+  lifecycle_state: string;
+  revision_state: string;
 };
 type ListingShare = { listing_id: string; displaying_agent_person_id: string };
 type Parish = { id: string; name: string };
@@ -724,8 +726,8 @@ export function SiteBuilder({
                   return (
                     <article key={listing.listing_id}>
                       <div className="listing-record-status">
-                        <span>Published</span>
-                        <small>Live website</small>
+                        <span>{listing.lifecycle_state.replaceAll("_", " ")}</span>
+                        <small>{listing.revision_state.replaceAll("_", " ")}</small>
                       </div>
                       <div>
                         <h3>{listing.title}</h3>
