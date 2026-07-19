@@ -5,6 +5,7 @@ import { AccountHeader } from "@/app/components/account-header";
 import { StatusMessage } from "@/app/components/status-message";
 import { getActiveMembershipContext } from "@/lib/auth/session";
 import { deriveWorkspaceAccess } from "@/lib/auth/workspace-access";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const metadata: Metadata = { title: "Listing review", description: "Review submitted brokerage listings and record approval decisions.", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -28,15 +29,32 @@ export default async function ListingReviewsPage({ searchParams }: { searchParam
   const access = deriveWorkspaceAccess({ hasMembership: true, roles: context.roles, permissions: context.permissions, platformRoles: context.platformRoles });
   if (!access.canReviewListings) redirect("/access-denied?reason=listing-review");
 
-  const { data: listings } = await context.supabase.from("listings")
-    .select("id,lifecycle_state,updated_at,listing_versions(id,version_number,revision_state,title,purpose,price,currency,visibility,submitted_at)")
+  // The signed-in account and brokerage review permission are verified above.
+  // Use a brokerage-scoped server query here so a submitted version cannot be
+  // omitted by an embedded-relation RLS projection and make the queue count lie.
+  const admin = createAdminClient();
+  const { data: listings, error: listingsError } = await admin.from("listings")
+    .select("id,lifecycle_state,updated_at")
     .eq("brokerage_id", context.membership.brokerage_id)
     .eq("lifecycle_state", "pending_initial_approval")
     .order("updated_at", { ascending: true });
+  const listingIds = (listings ?? []).map((listing) => listing.id);
+  const { data: submittedVersions, error: versionsError } = listingIds.length
+    ? await admin.from("listing_versions")
+        .select("id,listing_id,version_number,revision_state,title,purpose,price,currency,visibility,submitted_at")
+        .in("listing_id", listingIds)
+        .eq("revision_state", "submitted")
+        .order("version_number", { ascending: false })
+    : { data: [] as Array<SubmittedVersion & { listing_id: string }>, error: null };
+  const versionByListing = new Map<string, SubmittedVersion>();
+  for (const version of (submittedVersions ?? []) as Array<SubmittedVersion & { listing_id: string }>) {
+    if (!versionByListing.has(version.listing_id)) versionByListing.set(version.listing_id, version);
+  }
   const queue = (listings ?? []).map((listing) => ({
     listing,
-    version: (listing.listing_versions as unknown as SubmittedVersion[]).find((version) => version.revision_state === "submitted"),
+    version: versionByListing.get(listing.id),
   })).filter((item): item is typeof item & { version: SubmittedVersion } => Boolean(item.version));
+  const reviewLoadError = listingsError || versionsError ? "The review queue could not be loaded. Please try again." : undefined;
   const brokerage = context.membership.brokerages as unknown as { display_name?: string } | null;
 
   return <main className="account-page">
@@ -44,7 +62,7 @@ export default async function ListingReviewsPage({ searchParams }: { searchParam
     <section className="account-hero compact"><span className="eyebrow"><i /> Brokerage control</span><h1>Listing review.</h1><p>{brokerage?.display_name ?? "Your brokerage"}</p></section>
     <div className="listing-index review-queue">
       <div className="listing-index-bar"><div><span>Awaiting decision</span><strong>{queue.length} submission{queue.length === 1 ? "" : "s"}</strong></div><Link className="outline-dark-button review-back" href="/workspace/listings">All listings</Link></div>
-      <StatusMessage notice={query.notice} error={query.error} />
+      <StatusMessage notice={query.notice} error={query.error ?? reviewLoadError} />
       {queue.length ? <div className="listing-records">{queue.map(({ listing, version }) => <article key={listing.id}>
         <div className="listing-record-status"><span>Pending review</span><small>Version {version.version_number}</small></div>
         <div><h2>{version.title}</h2><p>{version.purpose === "sale" ? "For sale" : "Long-term rental"} · {new Intl.NumberFormat("en-JM", { style: "currency", currency: version.currency, maximumFractionDigits: 0 }).format(version.price)}</p></div>
