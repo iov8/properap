@@ -640,7 +640,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .listing-media-empty { border: 1px dashed #aeb9b5; margin-top: 28px; padding: 28px; }
 .listing-media-empty strong { display: block; font-family: Georgia, serif; font-size: 18px; font-weight: 400; margin-bottom: 7px; }
 .listing-media-upload { align-items: center; background: var(--cream); border: 1px solid var(--line); display: grid; gap: 18px; grid-template-columns: auto minmax(190px, 1fr) minmax(220px, 1fr); margin-top: 18px; padding: 18px; }
-.listing-media-upload .solid-button { align-items: center; cursor: pointer; display: inline-flex; min-height: 45px; padding: 0 18px; }
+.listing-media-upload .solid-button { align-items: center; cursor: pointer; display: inline-flex; justify-content: center; min-height: 45px; min-width: 184px; padding: 0 18px; white-space: nowrap; }
 .listing-media-upload .solid-button[aria-disabled="true"] { cursor: wait; opacity: .6; }
 .listing-media-upload input { clip: rect(0 0 0 0); clip-path: inset(50%); height: 1px; overflow: hidden; position: absolute; white-space: nowrap; width: 1px; }
 .listing-media-upload strong { display: block; font-size: 15px; }
