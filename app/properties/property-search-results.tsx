@@ -2,11 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { ListingCover, PropertySearchParams, PublicListing } from "@/lib/public-property-search";
-import { JamaicaListingMap } from "./jamaica-listing-map";
 import { CurrencyPriceRangeFields } from "@/app/components/currency-price-range-fields";
 import { convertJmdToCurrency, formatCurrencyAmount, type DisplayCurrency, type ExchangeRateSnapshot } from "@/lib/currency-conversions";
+
+// Leaflet accesses `window` while it initializes. Load the map only in the
+// browser so public property pages can always render their cards and images.
+const JamaicaListingMap = dynamic(
+  () => import("./jamaica-listing-map").then((module) => module.JamaicaListingMap),
+  { ssr: false, loading: () => <div className="listing-map-loading">Loading map…</div> },
+);
 
 const PRICE_OPTIONS = [0, 1_000_000, 5_000_000, 10_000_000, 25_000_000, 50_000_000, 100_000_000, 250_000_000, 500_000_000];
 const SIZE_OPTIONS = [500, 1_000, 1_500, 2_000, 3_000, 5_000];
