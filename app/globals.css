@@ -519,7 +519,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .account-hero p { color: rgba(255,255,255,.57); font-family: Georgia, serif; font-size: 17px; margin: 0; }
 .site-builder-hero { padding-bottom: 30px !important; padding-left: clamp(270px, 16vw, 320px) !important; padding-top: 24px !important; }.site-builder-hero .eyebrow, .site-builder-hero h1 { font-size: 15px; }.site-builder-hero .eyebrow { letter-spacing: .08em; text-transform: none; }.site-builder-hero h1 { letter-spacing: 0; margin: 13px 0 0; }
 .account-layout, .management-layout { display: grid; gap: 34px; grid-template-columns: minmax(0, 1fr) 320px; margin: -38px auto 0; max-width: 1250px; padding: 0 28px 90px; position: relative; }
-.account-settings-layout { display: grid; gap: 24px; grid-template-columns: 190px minmax(0, 1fr) 320px; margin: -38px auto 0; max-width: 1440px; padding: 0 28px 90px; position: relative; }
+.account-settings-layout { display: grid; gap: 24px; grid-template-columns: 190px minmax(0, 1fr) 320px; margin: 24px auto 0; max-width: 1440px; padding: 0 28px 90px; position: relative; }
 .account-section-nav { align-self: start; background: var(--ink); display: grid; gap: 3px; padding: 14px 10px; position: sticky; top: 18px; }
 .account-section-nav > span { color: var(--gold); font-size: 15px; font-weight: 700; letter-spacing: .09em; padding: 8px 10px 12px; text-transform: uppercase; }
 .account-section-nav a { align-items: center; color: rgba(255,255,255,.78); display: flex; font-size: 15px; font-weight: 700; min-height: 44px; padding: 0 12px; }
