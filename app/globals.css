@@ -203,7 +203,7 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .currency-price-conversions { align-items: stretch; display: grid; gap: 8px; justify-content: stretch; }
 .currency-price-conversions > div { align-items: baseline; display: grid; gap: 10px; grid-template-columns: 42px minmax(0, 1fr) auto 24px; }
 .currency-price-conversions > div > span { color: rgba(255,255,255,.68); font-size: 15px; font-weight: 700; letter-spacing: .05em; }
-.currency-price-conversions > div > strong { color: #fff; font-size: 15px; font-weight: 700; text-align: left; white-space: nowrap; }
+.currency-price-conversions > div > strong { color: #fff; font-size: 20px; font-weight: 700; text-align: left; white-space: nowrap; }
 .currency-price-conversions > div > strong small { font-size: 15px; font-weight: 700; }
 .currency-price-conversions > div > small { color: rgba(255,255,255,.55); font-size: 15px; }
 .currency-info { align-items: center; border: 1px solid rgba(255,255,255,.8); border-radius: 50%; color: #fff; cursor: help; display: inline-flex; font-family: Georgia, serif; font-size: 15px; font-style: italic; font-weight: 700; height: 24px; justify-content: center; justify-self: end; position: relative; width: 24px; }
