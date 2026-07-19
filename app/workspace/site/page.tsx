@@ -47,6 +47,13 @@ export default async function SiteBuilderPage({
       (canEditBrokerageWebsite &&
         site.owner_brokerage_id === context.membership?.brokerage_id),
   );
+  let privateListingsQuery = admin
+    .from("listings")
+    .select("id,brokerage_id,created_by_person_id,lifecycle_state,updated_at,listing_versions(version_number,revision_state,title,purpose,price,currency)")
+    .in("lifecycle_state", ["draft", "pending_initial_approval", "approved_inactive", "under_offer"])
+    .order("updated_at", { ascending: false });
+  if (context.membership?.brokerage_id) privateListingsQuery = privateListingsQuery.eq("brokerage_id", context.membership.brokerage_id);
+  else privateListingsQuery = privateListingsQuery.eq("created_by_person_id", context.person.id);
   const [testimonialResult, assetResult, listingResult, privateListingResult, shareResult, parishResult] =
     sites.length
       ? await Promise.all([
@@ -75,11 +82,7 @@ export default async function SiteBuilderPage({
               "listing_id,title,purpose,price,currency,brokerage_id,assigned_agent_person_id,published_at",
             )
             .order("published_at", { ascending: false }),
-          context.supabase
-            .from("listings")
-            .select("id,brokerage_id,created_by_person_id,lifecycle_state,updated_at,listing_versions(version_number,revision_state,title,purpose,price,currency)")
-            .in("lifecycle_state", ["draft", "pending_initial_approval", "approved_inactive", "under_offer"])
-            .order("updated_at", { ascending: false }),
+          privateListingsQuery,
           admin
             .from("listing_shares")
             .select("listing_id,displaying_agent_person_id")

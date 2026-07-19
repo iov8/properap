@@ -49,7 +49,7 @@ export function CreateListingForm({ parishes, returnTo }: { parishes: Parish[]; 
     if (!state.listingId || uploadStartedFor.current === state.listingId) return;
     uploadStartedFor.current = state.listingId;
 
-    const destination = state.returnTo || `/workspace/listings/${state.listingId}`;
+    const destination = `/workspace/listings/${state.listingId}`;
     if (!selectedImages.length) {
       router.push(`${destination}?notice=Private+draft+created.`);
       return;
