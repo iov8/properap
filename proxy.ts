@@ -127,6 +127,17 @@ export async function proxy(request: NextRequest) {
   }
 
   response.headers.set("Content-Security-Policy", policy);
+  if (!request.cookies.has("canadasap_display_currency")) {
+    const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
+    const displayCurrency = country === "JM" ? "JMD" : country === "CA" ? "CAD" : country === "GB" ? "GBP" : "USD";
+    response.cookies.set("canadasap_display_currency", displayCurrency, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+      secure: !isDevelopment,
+      ...(cookieDomain ? { domain: cookieDomain } : {}),
+    });
+  }
   return response;
 }
 

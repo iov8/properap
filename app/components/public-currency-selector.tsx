@@ -6,13 +6,19 @@ import type { DisplayCurrency } from "@/lib/currency-conversions";
 
 const storageKey = "canadasap-display-currency";
 
+function savedCurrency() {
+  const local = window.localStorage.getItem(storageKey);
+  if (local === "JMD" || local === "USD" || local === "CAD" || local === "GBP") return local;
+  const cookie = document.cookie.split("; ").find((item) => item.startsWith("canadasap_display_currency="))?.split("=")[1];
+  return cookie === "JMD" || cookie === "USD" || cookie === "CAD" || cookie === "GBP" ? cookie : "USD";
+}
+
 export function PublicCurrencySelector() {
   const router = useRouter();
   const [currency, setCurrency] = useState<DisplayCurrency>("JMD");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(storageKey);
-    if (saved === "JMD" || saved === "USD" || saved === "CAD" || saved === "GBP") setCurrency(saved);
+    setCurrency(savedCurrency());
   }, []);
 
   function changeCurrency(nextCurrency: DisplayCurrency) {

@@ -29,6 +29,11 @@ export function CurrencyPrice({ priceJmd, pricePeriod, rates }: { priceJmd: numb
     const loadCurrency = () => {
       const saved = window.localStorage.getItem("canadasap-display-currency");
       if (saved === "JMD" || saved === "USD" || saved === "CAD" || saved === "GBP") setSelectedCurrency(saved);
+      else {
+        const cookie = document.cookie.split("; ").find((item) => item.startsWith("canadasap_display_currency="))?.split("=")[1];
+        if (cookie === "JMD" || cookie === "USD" || cookie === "CAD" || cookie === "GBP") setSelectedCurrency(cookie);
+        else setSelectedCurrency("USD");
+      }
     };
     const handleChange = (event: Event) => setSelectedCurrency((event as CustomEvent<Currency>).detail);
     loadCurrency();
