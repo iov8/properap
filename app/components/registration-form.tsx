@@ -32,14 +32,15 @@ export function RegistrationForm({ brokerages, next }: { brokerages: Brokerage[]
       <label><span>First name</span><input name="firstName" autoComplete="given-name" minLength={1} maxLength={80} required /></label>
       <label><span>Last name</span><input name="lastName" autoComplete="family-name" minLength={1} maxLength={80} required /></label>
       <label className="full"><span>Email</span><input name="email" type="email" autoComplete="email" maxLength={320} required /></label>
+      <label><span>Password</span><input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
+      <label><span>Confirm password</span><input name="confirmPassword" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
+      <p className="password-requirements full">Use at least 10 characters, including one uppercase letter, one lowercase letter, and one number.</p>
       {role !== "consumer" && <>
         <label><span>Contact number</span><input name="contactPhone" type="tel" autoComplete="tel" minLength={7} maxLength={30} required /></label>
         <label><span>Business address</span><input name="contactAddress" autoComplete="street-address" minLength={8} maxLength={500} required /></label>
         {role === "agent" ? <label className="full"><span>Brokerage that referred you</span><select name="brokerageId" required defaultValue=""><option value="" disabled>Select your brokerage</option>{brokerages.map((brokerage) => <option value={brokerage.id} key={brokerage.id}>{brokerage.display_name}</option>)}</select></label> : <label className="full"><span>Brokerage name</span><input name="brokerageName" minLength={2} maxLength={160} required placeholder="Your brokerage company name" /></label>}
         <p className="registration-notice full"><strong>Professional accounts start inactive.</strong> ProperAP must approve the registration and confirm activation or payment before professional workspace access is enabled.</p>
       </>}
-      <label><span>Password</span><input name="password" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
-      <label><span>Confirm password</span><input name="confirmPassword" type="password" autoComplete="new-password" minLength={10} maxLength={128} required /></label>
       <label className="check-row full"><input name="privacyAccepted" type="checkbox" required /> I agree to the privacy notice and account terms for this pilot.</label>
       <button className="solid-button full" type="submit">{role === "consumer" ? "Create free account" : "Submit professional registration"}</button>
     </form>
