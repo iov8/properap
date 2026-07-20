@@ -11,6 +11,7 @@ export async function AccountHeader({
   canManageListings = false,
   canManageInquiries = false,
   canShareListings = false,
+  isConsumer = false,
 }: {
   displayName: string;
   hasWorkspace?: boolean;
@@ -18,6 +19,7 @@ export async function AccountHeader({
   canManageListings?: boolean;
   canManageInquiries?: boolean;
   canShareListings?: boolean;
+  isConsumer?: boolean;
 }) {
   const supabase = await createClient();
   const { count: unreadNotificationCount } = await supabase
@@ -31,6 +33,7 @@ export async function AccountHeader({
       <BrandLogo compact />
       <nav aria-label="Account navigation">
         <Link href="/properties">Properties</Link>
+        {isConsumer ? <><Link href="/account/saved-listings">Liked listings</Link><Link href="/account/messages">Message center</Link></> : null}
         {hasWorkspace ? <Link href="/workspace/site">Website</Link> : null}
         {canManageListings ? <Link href="/workspace/listings">Listings</Link> : null}
         {canShareListings ? <Link href="/workspace/sharing">Sharing</Link> : null}

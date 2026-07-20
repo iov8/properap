@@ -80,6 +80,7 @@ export default async function NotificationsPage() {
         canManageListings={access.isAgent || access.canReviewListings}
         canManageInquiries={access.canManageInquiries}
         canShareListings={access.canShareListings}
+        isConsumer={!context.membership}
       />
       <section className="account-hero compact inbox-hero">
         <span className="eyebrow"><i /> Updates for you</span>
