@@ -11,6 +11,7 @@ import { PropertySearchCard } from "@/app/components/property-search-card";
 import { AutoFitHeading } from "@/app/components/auto-fit-heading";
 import { PublicSiteLiveRefresh } from "@/app/components/public-site-live-refresh";
 import { BrokerageTeamGrid, type BrokerageTeamMember } from "@/app/components/brokerage-team-grid";
+import { AnalyticsTracker } from "@/app/components/analytics-tracker";
 
 type SiteListing = {
   listing_id: string; title: string; purpose: string; property_type: string;
@@ -110,6 +111,7 @@ function SiteShell({ site, listings, media, assets, testimonials, team }: { site
     contact: <section key="contact" className="professional-site-contact"><span>Start a conversation</span><h2>Ready when you are.</h2>{content.contactEmail ? <a href={`mailto:${encodeURIComponent(String(content.contactEmail))}`}>{String(content.contactEmail)}</a> : null}{content.contactPhone ? <p>{String(content.contactPhone)}</p> : null}<Link href="/properties">Browse all properties</Link></section>,
   } as Record<string, ReactNode>;
   return <main className="professional-site-page" style={style}>
+    <AnalyticsTracker eventName={site.site_type === "agent" ? "agent_website_viewed" : "brokerage_website_viewed"} siteId={site.id} />
     <PublicSiteLiveRefresh slug={site.slug} updatedAt={site.updated_at} />
     <style>{`.professional-site-page { background: ${palette.background} !important; color: ${palette.text} !important; }.professional-site-page .brokerage-site-hero { background: ${palette.primary} !important; }.professional-site-page .professional-site-hero h1 { color: ${heroTextColor} !important; -webkit-text-fill-color: ${heroTextColor} !important; }.professional-site-page .professional-site-hero p { color: ${heroSecondaryTextColor} !important; -webkit-text-fill-color: ${heroSecondaryTextColor} !important; }.professional-site-page .professional-site-hero .site-join-button { color: ${heroTextColor} !important; -webkit-text-fill-color: ${heroTextColor} !important; }`}</style>
     {order.map((name: string) => section[name])}

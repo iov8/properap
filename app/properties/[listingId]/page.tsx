@@ -11,6 +11,7 @@ import { StatusMessage } from "@/app/components/status-message";
 import { createInquiryAction } from "@/app/actions/inquiries";
 import { publicPageMetadata, STEADFAST_SITE_URL } from "@/lib/seo/metadata";
 import { CurrencyPrice } from "@/app/components/currency-price";
+import { AnalyticsTracker } from "@/app/components/analytics-tracker";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +79,7 @@ export default async function PublicListingPage({ params, searchParams }: RouteP
   }
 
   return <main className="public-listing-page">
+    <AnalyticsTracker eventName="listing_viewed" listingId={listing.listing_id} siteId={sourceSite?.id} />
     <StructuredData value={{
       "@context": "https://schema.org",
       "@type": "Product",
