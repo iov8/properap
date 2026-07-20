@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { updateInquiryStatusAction } from "@/app/actions/inquiries";
+import { useLiveMailbox } from "@/app/components/use-live-mailbox";
 
 export type AgentInquiry = {
   id: string;
@@ -30,9 +32,12 @@ function formatInquiryTime(value: string) {
 }
 
 export function InquiryInbox({ inquiries }: { inquiries: AgentInquiry[] }) {
+  const router = useRouter();
   const [filter, setFilter] = useState<InquiryFilter>("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const refreshInbox = useCallback(() => router.refresh(), [router]);
+  useLiveMailbox("inquiries", refreshInbox);
   const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return inquiries.filter((inquiry) => {

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { useLiveMailbox } from "@/app/components/use-live-mailbox";
 
 type UnreadResponse = {
   count: number;
@@ -32,20 +33,7 @@ export function NotificationNavLink({ initialCount }: { initialCount: number }) 
     }
   }, []);
 
-  useEffect(() => {
-    const interval = window.setInterval(refresh, 30_000);
-    const handleFocus = () => void refresh();
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") void refresh();
-    };
-    window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", handleVisibility);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [refresh]);
+  useLiveMailbox("notifications", refresh);
 
   const label = count > 99 ? "99+" : String(count);
   return (

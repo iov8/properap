@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   deleteNotificationAction,
   markAllNotificationsReadAction,
@@ -10,6 +11,7 @@ import {
   unstarNotificationAction,
 } from "@/app/actions/notifications";
 import { DesktopNotificationControl } from "@/app/components/desktop-notification-control";
+import { useLiveMailbox } from "@/app/components/use-live-mailbox";
 
 export type InboxNotification = {
   id: string;
@@ -41,10 +43,13 @@ function isApproval(eventType: string) {
 }
 
 export function NotificationInbox({ notifications }: { notifications: InboxNotification[] }) {
+  const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [deleteCandidateId, setDeleteCandidateId] = useState<string | null>(null);
+  const refreshInbox = useCallback(() => router.refresh(), [router]);
+  useLiveMailbox("notifications", refreshInbox);
   const unreadCount = notifications.filter((notification) => !notification.readAt).length;
   const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
