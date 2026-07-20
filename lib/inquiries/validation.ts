@@ -25,5 +25,5 @@ export const createInquirySchema = z.object({
 
 export const inquiryStatusSchema = z.object({
   inquiryId: z.string().uuid("This inquiry is not valid."),
-  operation: z.enum(["claim", "close", "reopen"]),
+  operation: z.enum(["claim", "close", "reopen", "archive", "restore"]),
 });

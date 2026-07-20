@@ -891,6 +891,12 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .inquiry-mail-details span { color: #687873; font-size: 15px; }
 .inquiry-mail-actions .outline-dark-button { align-items: center; display: inline-flex; min-height: 40px; padding: 0 15px; }
 .inquiry-mail-actions form { margin: 0; }
+.inquiry-status-badge { border: 1px solid var(--line); display: inline-block; font-size: 15px; font-weight: 700; letter-spacing: .04em; margin-top: 9px; padding: 4px 8px; }
+.inquiry-status-badge.status-new { background: #fff4d6; border-color: #d8a72e; color: #6d4d00; }
+.inquiry-status-badge.status-in_progress { background: var(--sage); color: var(--ink); }
+.inquiry-status-badge.status-closed { background: #eef0ef; color: #465651; }
+.inquiry-status-badge.status-archived { background: #e6e8ec; color: #3f4650; }
+.inquiry-archive-button { min-height: 40px; }
 .inquiry-shell { margin: 24px auto 0; max-width: 1100px; padding: 0 28px 90px; position: relative; }
 .sharing-shell { margin: 24px auto 0; max-width: 1200px; padding: 0 28px 90px; }
 .sharing-layout { align-items: start; display: grid; gap: 24px; grid-template-columns: 220px minmax(0, 1fr); margin-top: 22px; }
