@@ -71,6 +71,11 @@ export async function registerAction(formData: FormData) {
   const parsed = registerSchema.safeParse({
     firstName: readText(formData, "firstName"),
     lastName: readText(formData, "lastName"),
+    requestedRole: readText(formData, "requestedRole"),
+    contactPhone: readText(formData, "contactPhone"),
+    contactAddress: readText(formData, "contactAddress"),
+    brokerageId: readText(formData, "brokerageId"),
+    brokerageName: readText(formData, "brokerageName"),
     email: readText(formData, "email"),
     password: readText(formData, "password"),
     confirmPassword: readText(formData, "confirmPassword"),
@@ -87,7 +92,7 @@ export async function registerAction(formData: FormData) {
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      data: { first_name: parsed.data.firstName, last_name: parsed.data.lastName, display_name: `${parsed.data.firstName} ${parsed.data.lastName}` },
+      data: { first_name: parsed.data.firstName, last_name: parsed.data.lastName, display_name: `${parsed.data.firstName} ${parsed.data.lastName}`, requested_role: parsed.data.requestedRole, contact_phone: parsed.data.contactPhone, contact_address: parsed.data.contactAddress, brokerage_id: parsed.data.brokerageId || undefined, brokerage_name: parsed.data.brokerageName || undefined },
       emailRedirectTo: `${getAppUrl()}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });
