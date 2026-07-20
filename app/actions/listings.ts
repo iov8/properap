@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getActiveMembershipContext } from "@/lib/auth/session";
+import { getActiveMembershipContext, requireAccount } from "@/lib/auth/session";
 import { createListingDraftSchema, updateListingDraftSchema } from "@/lib/listings/validation";
 import {
   extensionForMime,
@@ -134,6 +134,64 @@ export async function startActiveListingEditAction(formData: FormData) {
   revalidatePath("/workspace/listings");
   revalidatePath(`/workspace/listings/${listingId.data}`);
   redirect(`/workspace/listings/${listingId.data}?notice=${encodeURIComponent("Editing is open. The listing is now private until the brokerage approves it again.")}`);
+}
+
+const transferOutSchema = z.object({
+  listingId: z.string().uuid(),
+  recipientPersonId: z.string().uuid(),
+});
+
+/** Starts an auditable handoff. The database command verifies broker authority
+ * and that the receiving person is an active independent agent. */
+export async function initiateListingTransferOutAction(formData: FormData) {
+  const parsed = transferOutSchema.safeParse({
+    listingId: readText(formData, "listingId"),
+    recipientPersonId: readText(formData, "recipientPersonId"),
+  });
+  if (!parsed.success) redirect("/workspace/listings?error=Choose+an+eligible+independent+agent.");
+
+  const context = await getActiveMembershipContext(`/workspace/listings/${parsed.data.listingId}`);
+  if (!context.membership || !context.roles.includes("broker")) {
+    redirect(`/workspace/listings/${parsed.data.listingId}?error=Only+the+broker+can+transfer+a+listing+out.`);
+  }
+  const { error } = await context.supabase.from("initiate_listing_transfer_out_commands").insert({
+    request_id: randomUUID(),
+    listing_id: parsed.data.listingId,
+    recipient_person_id: parsed.data.recipientPersonId,
+  });
+  if (error) {
+    redirect(`/workspace/listings/${parsed.data.listingId}?error=${encodeURIComponent("The transfer could not be started. Confirm the recipient is an active independent agent and the listing is eligible.")}`);
+  }
+  revalidatePath("/workspace/listings");
+  revalidatePath(`/workspace/listings/${parsed.data.listingId}`);
+  revalidatePath("/account/notifications");
+  redirect(`/workspace/listings?status=all&notice=${encodeURIComponent("Transfer request sent. The listing is now unpublished while the independent agent decides.")}`);
+}
+
+const transferResponseSchema = z.object({
+  transferId: z.string().uuid(),
+  decision: z.enum(["accept", "decline"]),
+  reason: z.string().trim().max(1000),
+});
+
+export async function respondToListingTransferOutAction(formData: FormData) {
+  const parsed = transferResponseSchema.safeParse({
+    transferId: readText(formData, "transferId"),
+    decision: readText(formData, "decision"),
+    reason: readText(formData, "reason"),
+  });
+  if (!parsed.success) redirect("/account/transfers?error=The+transfer+response+is+invalid.");
+  const account = await requireAccount("/account/transfers");
+  const { error } = await account.supabase.from("respond_listing_transfer_out_commands").insert({
+    request_id: parsed.data.transferId,
+    decision: parsed.data.decision,
+    response_reason: parsed.data.reason || null,
+  });
+  if (error) redirect(`/account/transfers?error=${encodeURIComponent("This transfer could not be completed. Its eligibility may have changed.")}`);
+  revalidatePath("/account/transfers");
+  revalidatePath("/account/notifications");
+  revalidatePath("/workspace/listings");
+  redirect(`/account/transfers?notice=${encodeURIComponent(parsed.data.decision === "accept" ? "Transfer accepted. The listing is now your private independent-agent draft." : "Transfer declined. The brokerage has been notified and the listing remains unpublished.")}`);
 }
 
 const listingClosureRequestSchema = z.object({

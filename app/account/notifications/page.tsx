@@ -27,6 +27,9 @@ function activityFor(eventType: string, actorName: string | null) {
   if (eventType === "membership.suspended") return `Suspended by ${person}`;
   if (eventType === "membership.reactivated") return `Restored by ${person}`;
   if (eventType === "membership.removed") return `Removed by ${person}`;
+  if (eventType === "listing.transfer_out_requested") return `Transfer requested by ${person}`;
+  if (eventType === "listing.transfer_out_accepted") return `Transfer accepted by ${person}`;
+  if (eventType === "listing.transfer_out_declined") return `Transfer declined by ${person}`;
   return `Updated by ${person}`;
 }
 

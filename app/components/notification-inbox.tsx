@@ -124,6 +124,7 @@ export function NotificationInbox({ notifications }: { notifications: InboxNotif
                 {notification.targetType === "inquiry" ? <Link className="solid-button" href="/workspace/inquiries">Open inquiry</Link> : null}
                 {notification.targetType === "agent_application" ? <Link className="solid-button" href="/broker/agents?section=applications">Open application</Link> : null}
                 {notification.targetType === "brokerage_membership" ? <Link className="solid-button" href="/account">Open account</Link> : null}
+                {notification.targetType === "listing_transfer" ? <Link className="solid-button" href="/account/transfers">Open transfer</Link> : null}
                 <div className="notification-message-controls">
                   {!notification.readAt ? <form action={markNotificationReadAction}><input name="notificationId" type="hidden" value={notification.id} /><button className="notification-read-button" type="submit">Mark read</button></form> : <span className="notification-read-state">Read</span>}
                   <form action={notification.starredAt ? unstarNotificationAction : starNotificationAction}>

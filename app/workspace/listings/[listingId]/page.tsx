@@ -7,6 +7,7 @@ import { EditListingForm, type EditableListingDraft } from "@/app/components/edi
 import { ListingMediaUploader } from "@/app/components/listing-media-uploader";
 import { ListingClosurePanel } from "@/app/components/listing-closure-panel";
 import { ListingSubmissionPanel } from "@/app/components/listing-submission-panel";
+import { ListingTransferOutPanel, type IndependentAgentRecipient } from "@/app/components/listing-transfer-out-panel";
 import { ReviewDecisionForm } from "@/app/components/review-decision-form";
 import { StatusMessage } from "@/app/components/status-message";
 import { activatePublicListingAction, startActiveListingEditAction } from "@/app/actions/listings";
@@ -74,6 +75,21 @@ export default async function ListingDraftPage({ params, searchParams }: { param
     (!access.canReviewListings && listing.created_by_person_id === context.person.id)
   );
   if (!isAuthorized || !listing) redirect("/access-denied?reason=listing-record");
+
+  const { data: independentProfiles } = access.canReviewListings && context.roles.includes("broker")
+    ? await admin.from("independent_agent_profiles").select("person_id").eq("status", "active")
+    : { data: [] as Array<{ person_id: string }> };
+  const independentPersonIds = (independentProfiles ?? []).map((profile) => profile.person_id);
+  const { data: independentPeople } = independentPersonIds.length
+    ? await admin.from("people").select("id,first_name,last_name,display_name,primary_email,account_status").in("id", independentPersonIds).eq("account_status", "active")
+    : { data: [] as Array<{ id: string; first_name: string | null; last_name: string | null; display_name: string; primary_email: string }> };
+  const independentRecipients: IndependentAgentRecipient[] = (independentPeople ?? []).map((person) => ({
+    personId: person.id,
+    firstName: person.first_name,
+    lastName: person.last_name,
+    displayName: person.display_name,
+    email: person.primary_email ?? "No email address",
+  }));
 
   const [{ data: versionRows }, { data: property }, { data: parishes }] = await Promise.all([
     admin.from("listing_versions").select("id,version_number,revision_state,purpose,property_type,property_subtype,requested_lifecycle_state,price,price_period,title,description,bedrooms,bathrooms,building_area,land_area,area_unit,visibility,public_location_precision").eq("listing_id", listing.id),
@@ -202,6 +218,8 @@ export default async function ListingDraftPage({ params, searchParams }: { param
           <button className="solid-button" type="submit">Edit listing</button>
         </form>
       </section> : null}
+      {access.canReviewListings && context.roles.includes("broker") && ["active", "under_offer", "approved_inactive"].includes(listing.lifecycle_state) && listing.current_approved_version_id ? <ListingTransferOutPanel listingId={listing.id} recipients={independentRecipients} /> : null}
+      {listing.lifecycle_state === "transfer_pending" ? <section className="locked-listing-card transfer-pending-card"><span>Transfer pending</span><h2>This listing is awaiting the independent agent’s decision.</h2><p>It is not visible to the public. If the agent declines, the listing remains with the brokerage and stays unpublished until you decide what to do next.</p></section> : null}
       {initial ? <><EditListingForm key={`${listing.id}:${listing.lock_version}`} initial={initial} parishes={parishes ?? []} />{version.requested_lifecycle_state && ["active", "sold", "rented"].includes(version.requested_lifecycle_state) ? <ListingClosurePanel listingId={listing.id} lockVersion={listing.lock_version} requestedState={version.requested_lifecycle_state as "active" | "sold" | "rented"} /> : null}<ListingMediaUploader listingId={listing.id} images={readyImages} reservedCount={reservedCount} coverMediaId={coverMediaId} /><ListingSubmissionPanel listingId={listing.id} listingVersionId={version.id} lockVersion={listing.lock_version} readyImageCount={readyImages.length} /></> : <>
         <section className="submitted-listing-summary">
           <div className="submitted-listing-heading"><span>Listing details</span><h2>{version?.revision_state === "submitted" ? "Submitted for review" : "Current listing"}</h2><p>{version?.revision_state === "submitted" ? "These are the exact details awaiting the brokerage decision." : "Review the current details or choose Edit listing to make changes."}</p></div>
