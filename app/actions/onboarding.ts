@@ -104,6 +104,7 @@ export async function requestProfessionalUpgradeAction(formData: FormData) {
   const { error } = await admin.from("professional_registration_requests").insert({
     person_id: account.person.id,
     request_type: parsed.data.requestedRole,
+    agent_mode: parsed.data.requestedRole === "agent" ? "brokerage" : null,
     brokerage_id: parsed.data.requestedRole === "agent" ? parsed.data.brokerageId : null,
     brokerage_name: parsed.data.requestedRole === "broker" ? parsed.data.brokerageName : null,
     contact_phone: parsed.data.contactPhone,
