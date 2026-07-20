@@ -90,7 +90,7 @@ export default async function AccountPage({
             </form>
           </section>
 
-          {!isConsumer && !openApplication ? (
+          {isConsumer && !openApplication ? (
             <section className="account-card accent-card">
               <div className="card-heading"><span>For professionals</span><h2>Apply to join a brokerage</h2></div>
               <p>Independent agent registration is not available. Choose the brokerage that referred you; its broker will review your application.</p>
