@@ -17,13 +17,14 @@ const capabilities = [
 type StaffCapabilityPanelProps = {
   membershipId: string;
   activePermissionKeys: string[];
+  returnTo: string;
   staffName: string;
 };
 
-export function StaffCapabilityPanel({ membershipId, activePermissionKeys, staffName }: StaffCapabilityPanelProps) {
+export function StaffCapabilityPanel({ membershipId, activePermissionKeys, returnTo, staffName }: StaffCapabilityPanelProps) {
   return (
-    <details className="capability-panel">
-      <summary><strong>{staffName}</strong><span>Permissions</span></summary>
+    <div className="capability-panel">
+      <header><strong>{staffName}</strong><span>Permissions</span></header>
       <p>Turn on only the work this person is responsible for. Every change is recorded.</p>
       <div className="capability-list">
         {capabilities.map((capability) => {
@@ -34,6 +35,7 @@ export function StaffCapabilityPanel({ membershipId, activePermissionKeys, staff
               <input name="permissionKey" type="hidden" value={capability.key} />
               <input name="operation" type="hidden" value={enabled ? "revoke" : "grant"} />
               <input name="reason" type="hidden" value={enabled ? "Removed from broker team access" : "Assigned by principal broker"} />
+              <input name="returnTo" type="hidden" value={returnTo} />
               <span><strong>{capability.name}</strong><small>{capability.description}</small></span>
               <button className={enabled ? "capability-toggle enabled" : "capability-toggle"} type="submit" aria-label={`${enabled ? "Remove" : "Allow"} ${capability.name}`}>
                 {enabled ? "Allowed" : "Not allowed"}
@@ -42,6 +44,6 @@ export function StaffCapabilityPanel({ membershipId, activePermissionKeys, staff
           );
         })}
       </div>
-    </details>
+    </div>
   );
 }

@@ -187,9 +187,10 @@ export async function updateStaffCapabilityAction(formData: FormData) {
     operation: readText(formData, "operation"),
     reason: readText(formData, "reason"),
   });
+  const returnTo = safeInternalPath(readText(formData, "returnTo"), "/broker/agents?section=members");
 
   if (!parsed.success) {
-    redirect("/broker/agents?error=Check+the+staff+capability+change.");
+    redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}error=Check+the+staff+capability+change.`);
   }
 
   const { error } = await context.supabase
@@ -202,11 +203,11 @@ export async function updateStaffCapabilityAction(formData: FormData) {
     });
 
   if (error) {
-    redirect("/broker/agents?error=The+staff+capability+could+not+be+updated.");
+    redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}error=The+staff+capability+could+not+be+updated.`);
   }
 
   revalidatePath("/broker/agents");
-  redirect("/broker/agents?notice=Staff+access+updated.");
+  redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}notice=Staff+access+updated.`);
 }
 
 export async function departAgentAction(formData: FormData) {
