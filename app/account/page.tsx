@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AccountHeader } from "@/app/components/account-header";
 import { AccountSectionNav } from "@/app/components/account-section-nav";
 import { ConsumerAccountNav } from "@/app/components/consumer-account-nav";
+import { PlatformAccountNav } from "@/app/components/platform-account-nav";
 import { StatusMessage } from "@/app/components/status-message";
 import {
   submitAgentApplicationAction,
@@ -75,7 +76,7 @@ export default async function AccountPage({
         <p>{isConsumer ? "Keep your details, saved properties, messages, and notifications in one private place." : "Keep your profile current and manage how you participate in the professional network."}</p>
       </section>
       <div className="account-settings-layout">
-        {isConsumer ? <ConsumerAccountNav active="profile" /> : <AccountSectionNav active={activeSection} />}
+        {isPlatformAccount ? <PlatformAccountNav active="profile" /> : isConsumer ? <ConsumerAccountNav active="profile" /> : <AccountSectionNav active={activeSection} />}
         <div className="account-main">
           <StatusMessage error={params.error} notice={params.notice} />
           {activeSection === "profile" ? <>

@@ -3,6 +3,7 @@ import { requestEmailVerificationAction, signOutAction } from "@/app/actions/aut
 import { AccountHeader } from "@/app/components/account-header";
 import { AccountSectionNav } from "@/app/components/account-section-nav";
 import { ConsumerAccountNav } from "@/app/components/consumer-account-nav";
+import { PlatformAccountNav } from "@/app/components/platform-account-nav";
 import { MfaEnrollment } from "@/app/components/mfa-enrollment";
 import { StatusMessage } from "@/app/components/status-message";
 import { getActiveMembershipContext } from "@/lib/auth/session";
@@ -18,10 +19,10 @@ export default async function AccountSecurityPage({ searchParams }: { searchPara
   const required = access.isAdmin || access.isOperations;
 
   return <main className="account-page">
-    <AccountHeader displayName={context.person.display_name} hasWorkspace={access.hasWorkspace} canManageAgents={access.canManageAgents} canManageListings={access.isAgent || access.canReviewListings} canManageInquiries={access.canManageInquiries} canShareListings={access.canShareListings} isConsumer={!context.membership} />
+    <AccountHeader displayName={context.person.display_name} hasWorkspace={access.hasWorkspace} canManageAgents={access.canManageAgents} canManageListings={access.isAgent || access.canReviewListings} canManageInquiries={access.canManageInquiries} canShareListings={access.canShareListings} isConsumer={!context.membership && !required} isOperations={access.isOperations} isAdmin={access.isAdmin} />
     <section className="account-hero compact"><span className="eyebrow"><i /> Account protection</span><h1>Security</h1><p>Protect your account and control signed-in machines.</p></section>
     <div className="account-settings-layout account-security-settings-layout">
-      {!context.membership ? <ConsumerAccountNav active="security" /> : <AccountSectionNav active="security" />}
+      {required ? <PlatformAccountNav active="security" /> : !context.membership ? <ConsumerAccountNav active="security" /> : <AccountSectionNav active="security" />}
       <div className="account-main">
       <section className="account-card">
         <div className="card-heading"><span>Email verification</span><h2>{context.person.email_verified_at ? "Email verified" : "Verify your email"}</h2></div>

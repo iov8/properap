@@ -25,6 +25,7 @@ export async function AccountHeader({
   isOperations?: boolean;
   isAdmin?: boolean;
 }) {
+  const isPlatformRole = isOperations || isAdmin;
   const supabase = await createClient();
   const { count: unreadNotificationCount } = await supabase
     .from("notifications")
@@ -37,15 +38,15 @@ export async function AccountHeader({
       <BrandLogo compact />
       <nav aria-label="Account navigation">
         <Link href="/properties">Properties</Link>
-        <Link href="/account/saved-listings">My watch</Link>
-        {isConsumer ? <Link href="/account/messages">Message center</Link> : null}
+        {!isPlatformRole ? <Link href="/account/saved-listings">My watch</Link> : null}
+        {isConsumer && !isPlatformRole ? <Link href="/account/messages">Message center</Link> : null}
         {hasWorkspace ? <Link href="/workspace/site">Website</Link> : null}
         {canManageListings ? <Link href="/workspace/listings">Listings</Link> : null}
         {canShareListings ? <Link href="/workspace/sharing">Sharing</Link> : null}
         {canManageInquiries ? <Link href="/workspace/inquiries">Inquiries</Link> : null}
         {canManageAgents ? <Link href="/broker/agents">Team</Link> : null}
         {(canManageListings || canManageAgents || canManageInquiries || canShareListings) ? <Link href="/workspace/analytics">Analytics</Link> : null}
-        {(isOperations || isAdmin) ? <Link href="/staff">Operations</Link> : null}
+        {isPlatformRole ? <Link href="/staff">Operations</Link> : null}
         <Link href="/account">My account</Link>
         <NotificationNavLink initialCount={unreadNotificationCount ?? 0} />
       </nav>

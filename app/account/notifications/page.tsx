@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AccountHeader } from "@/app/components/account-header";
 import { ConsumerAccountNav } from "@/app/components/consumer-account-nav";
+import { PlatformAccountNav } from "@/app/components/platform-account-nav";
 import { NotificationInbox, type InboxNotification } from "@/app/components/notification-inbox";
 import { getActiveMembershipContext } from "@/lib/auth/session";
 import { deriveWorkspaceAccess } from "@/lib/auth/workspace-access";
@@ -81,13 +82,15 @@ export default async function NotificationsPage() {
         canManageListings={access.isAgent || access.canReviewListings}
         canManageInquiries={access.canManageInquiries}
         canShareListings={access.canShareListings}
-        isConsumer={!context.membership}
+        isConsumer={!context.membership && !access.isOperations && !access.isAdmin}
+        isOperations={access.isOperations}
+        isAdmin={access.isAdmin}
       />
       <section className="account-hero compact inbox-hero">
         <span className="eyebrow"><i /> Updates for you</span>
         <h1>Notifications</h1>
       </section>
-      {!context.membership ? <div className="account-settings-layout consumer-account-layout"><ConsumerAccountNav active="notifications" /><div className="account-main"><NotificationInbox notifications={inboxNotifications} /></div></div> : <NotificationInbox notifications={inboxNotifications} />}
+      {access.isOperations || access.isAdmin ? <div className="account-settings-layout consumer-account-layout"><PlatformAccountNav active="notifications" /><div className="account-main"><NotificationInbox notifications={inboxNotifications} /></div></div> : !context.membership ? <div className="account-settings-layout consumer-account-layout"><ConsumerAccountNav active="notifications" /><div className="account-main"><NotificationInbox notifications={inboxNotifications} /></div></div> : <NotificationInbox notifications={inboxNotifications} />}
     </main>
   );
 }
