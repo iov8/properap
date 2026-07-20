@@ -1258,4 +1258,4 @@ footer p, footer > span { color: rgba(255,255,255,.43); font-size: 15px; }
 .plans-cta h2 { margin: 0; font-family: Georgia,serif; font-size: 28px; font-weight: 500; }
 .plans-cta a { font-size: 15px; }
 @media (max-width: 1200px) { .plans-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .analytics-metrics { grid-template-columns: repeat(2,1fr); } }
-@media (max-width: 760px) { .analytics-layout { grid-template-columns: 1fr; } .analytics-layout .account-section-nav { position: static; } .analytics-toolbar, .plans-cta { align-items: stretch; flex-direction: column; } .analytics-metrics, .analytics-two-column, .plans-grid, .plans-explainer, .plans-faq > div { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .analytics-layout { grid-template-columns: minmax(0,1fr); } .analytics-layout .account-section-nav { position: static; } .analytics-toolbar, .plans-cta { align-items: stretch; flex-direction: column; } .analytics-metrics, .analytics-two-column, .plans-grid, .plans-explainer, .plans-faq > div { grid-template-columns: minmax(0,1fr); } }
