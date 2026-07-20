@@ -12,6 +12,7 @@ import { createInquiryAction } from "@/app/actions/inquiries";
 import { publicPageMetadata, STEADFAST_SITE_URL } from "@/lib/seo/metadata";
 import { CurrencyPrice } from "@/app/components/currency-price";
 import { AnalyticsTracker } from "@/app/components/analytics-tracker";
+import { ListingActions } from "@/app/components/listing-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -95,7 +96,7 @@ export default async function PublicListingPage({ params, searchParams }: RouteP
     <PublicHeader />
     <section className="public-listing-hero">
       <div><span>{listing.purpose === "sale" ? "For sale" : "Long-term rental"} · {listing.lifecycle_state.replaceAll("_", " ")}</span><h1>{listing.title}</h1><p>{location}</p><dl className="public-listing-dates"><div><dt>Published</dt><dd>{formatListingDate(listing.published_at)}</dd></div><div><dt>Last updated</dt><dd>{formatListingDate(listing.updated_at)}</dd></div></dl></div>
-      {listing.currency === "JMD" ? <CurrencyPrice priceJmd={Number(listing.price)} pricePeriod={listing.price_period} rates={exchangeRates} /> : <strong>{new Intl.NumberFormat("en-JM", { style: "currency", currency: listing.currency, maximumFractionDigits: 0 }).format(listing.price)}{listing.price_period ? <small> / {listing.price_period}</small> : null}</strong>}
+      <div className="public-listing-price-actions"><ListingActions listingId={listing.listing_id} title={listing.title} siteId={sourceSite?.id} />{listing.currency === "JMD" ? <CurrencyPrice priceJmd={Number(listing.price)} pricePeriod={listing.price_period} rates={exchangeRates} /> : <strong>{new Intl.NumberFormat("en-JM", { style: "currency", currency: listing.currency, maximumFractionDigits: 0 }).format(listing.price)}{listing.price_period ? <small> / {listing.price_period}</small> : null}</strong>}</div>
     </section>
     <div className="public-listing-layout">
       <div className="public-listing-main">

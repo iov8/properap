@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { ListingCover, PropertySearchParams, PublicListing } from "@/lib/public-property-search";
 import { CurrencyPriceRangeFields } from "@/app/components/currency-price-range-fields";
+import { ListingActions } from "@/app/components/listing-actions";
 import { convertJmdToCurrency, formatCurrencyAmount, type DisplayCurrency, type ExchangeRateSnapshot } from "@/lib/currency-conversions";
 
 // Leaflet accesses `window` while it initializes. Load the map only in the
@@ -50,6 +51,7 @@ function PropertyCard({ listing, cover, currency, rates }: { listing: PublicList
   const facts = [listing.bedrooms === null ? null : `${listing.bedrooms} bd`, listing.bathrooms === null ? null : `${listing.bathrooms} ba`, listing.building_area === null ? null : `${new Intl.NumberFormat("en-JM").format(listing.building_area)} sq ft`].filter(Boolean).join(" · ");
   return <article className="property-result-card" key={listing.listing_id}>
     <Link className="property-card-visual" href={`/properties/${listing.listing_id}`} aria-label={`View ${listing.title}`}>{cover ? <Image src={`/media/listings/${cover.id}/card.webp`} alt={`${listing.title} property view`} width={cover.width} height={cover.height} sizes="(max-width: 680px) 100vw, (max-width: 1050px) 33vw, 17vw" unoptimized /> : <span className="property-card-placeholder">Photo preparing</span>}<span className="property-card-badge">{listing.purpose === "sale" ? "For sale" : "For rent"}</span></Link>
+    <ListingActions listingId={listing.listing_id} title={listing.title} className="listing-card-actions" />
     <div className="property-card-copy"><strong className="property-card-price">{formatPrice(listing, currency, rates)}</strong><h2><Link href={`/properties/${listing.listing_id}`}>{listing.title}</Link></h2>{facts ? <p className="property-card-facts">{facts}</p> : null}<p className="property-card-location">{listing.public_location_label ?? listing.administrative_area_name}</p></div>
   </article>;
 }
