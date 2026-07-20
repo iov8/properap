@@ -19,7 +19,7 @@ export async function progressProfessionalRegistrationAction(formData: FormData)
   if (!parsed.success) redirect("/staff/registrations?error=Check+the+registration+action.");
 
   const admin = createAdminClient();
-  const { data: request } = await admin.from("professional_registration_requests").select("id,status,person_id,request_type,agent_mode").eq("id", parsed.data.requestId).maybeSingle();
+  const { data: request } = await admin.from("professional_registration_requests").select("id,status,person_id,request_type,agent_mode,brokerage_id").eq("id", parsed.data.requestId).maybeSingle();
   if (!request) redirect("/staff/registrations?error=Registration+request+not+found.");
 
   const allowed: Record<typeof parsed.data.operation, string[]> = {
@@ -40,6 +40,20 @@ export async function progressProfessionalRegistrationAction(formData: FormData)
     await admin.from("people").update({ account_status: "active" }).eq("id", request.person_id);
     if (request.request_type === "agent" && request.agent_mode === "independent") {
       await admin.from("independent_agent_profiles").update({ status: "active", activated_at: new Date().toISOString(), deactivated_at: null }).eq("person_id", request.person_id);
+    }
+    if (request.request_type === "agent" && request.agent_mode === "brokerage" && request.brokerage_id) {
+      const { data: membership } = await admin.from("brokerage_memberships")
+        .select("id").eq("person_id", request.person_id).eq("brokerage_id", request.brokerage_id).eq("status", "active").maybeSingle();
+      if (!membership) {
+        const { data: createdMembership, error: membershipError } = await admin.from("brokerage_memberships").insert({
+          brokerage_id: request.brokerage_id, person_id: request.person_id, status: "active", starts_at: new Date().toISOString(), approved_by_person_id: context.person.id, reason: "ProperAP activated brokerage agent registration",
+        }).select("id").single();
+        if (membershipError || !createdMembership) redirect("/staff/registrations?error=The+brokerage+membership+could+not+be+activated.");
+        const { error: roleError } = await admin.from("membership_roles").insert({
+          membership_id: createdMembership.id, brokerage_id: request.brokerage_id, role_key: "agent", granted_by_person_id: context.person.id,
+        });
+        if (roleError) redirect("/staff/registrations?error=The+agent+role+could+not+be+activated.");
+      }
     }
   }
   const { error } = await admin.from("professional_registration_requests").update(update).eq("id", request.id);
