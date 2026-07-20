@@ -3,7 +3,7 @@ import Link from "next/link";
 export function StaffNav({ active }: { active: "dashboard" | "registrations" | "brokerages" | "listings" }) {
   const links: Array<[typeof active, string, string]> = [
     ["dashboard", "Dashboard", "/staff"],
-    ["registrations", "Registrations", "/staff/registrations"],
+    ["registrations", "Members", "/staff/registrations"],
     ["brokerages", "Brokerages", "/staff/brokerages"],
     ["listings", "Listing monitor", "/staff/listings"],
   ];
