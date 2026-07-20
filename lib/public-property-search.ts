@@ -6,7 +6,6 @@ export type PropertySearchParams = {
   requestedType: string;
   category: string;
   minPrice: number | null;
-  maxPrice: number | null;
   minimumBeds: number | null;
   minimumSize: number | null;
   intent: "buy" | "rent" | "vacation";
@@ -56,10 +55,6 @@ function wholeNumber(value: string | string[] | null | undefined, maximum = 1_00
   return Number.isFinite(parsed) && parsed >= 0 && parsed <= maximum ? Math.floor(parsed) : null;
 }
 
-function maximumPrice(value: string | string[] | null | undefined) {
-  return firstParameter(value).endsWith("+") ? null : wholeNumber(value);
-}
-
 function safeSlug(value: string | string[] | null | undefined) {
   return firstParameter(value).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 100);
 }
@@ -71,7 +66,6 @@ export function parsePropertySearchParams(params: Record<string, string | string
     requestedType: firstParameter(params.type).toLowerCase().slice(0, 30),
     category: firstParameter(params.category).toLowerCase(),
     minPrice: wholeNumber(params.minPrice),
-    maxPrice: maximumPrice(params.maxPrice),
     minimumBeds: wholeNumber(params.beds, 20),
     minimumSize: wholeNumber(params.minSize, 10_000_000),
     intent: firstParameter(params.intent) === "rent" ? "rent" : firstParameter(params.intent) === "vacation" ? "vacation" : "buy",
@@ -84,7 +78,6 @@ export function parsePropertySearchParams(params: Record<string, string | string
 export function jmdPriceFilters(filters: PropertySearchParams, rates: ExchangeRateSnapshot | null) {
   return {
     minPrice: filters.minPrice === null ? null : Math.round(convertCurrencyToJmd(filters.minPrice, filters.displayCurrency, rates)),
-    maxPrice: filters.maxPrice === null ? null : Math.round(convertCurrencyToJmd(filters.maxPrice, filters.displayCurrency, rates)),
   };
 }
 
@@ -103,7 +96,6 @@ export async function searchPublicListings(supabase: SupabaseClient, filters: Pr
   if (filters.category === "commercial") query = query.eq("property_type", "commercial");
   const jmdPrices = jmdPriceFilters(filters, rates);
   if (jmdPrices.minPrice !== null) query = query.gte("price", jmdPrices.minPrice);
-  if (jmdPrices.maxPrice !== null) query = query.lte("price", jmdPrices.maxPrice);
   if (filters.minimumBeds !== null) query = query.gte("bedrooms", filters.minimumBeds);
   if (filters.minimumSize !== null) query = query.gte("building_area", filters.minimumSize);
   if (filters.brokerageSlug) query = query.eq("brokerage_slug", filters.brokerageSlug);

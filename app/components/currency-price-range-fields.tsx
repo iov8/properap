@@ -4,28 +4,24 @@ import { useState } from "react";
 import { DISPLAY_CURRENCIES, formatCurrencyAmount, type DisplayCurrency, type ExchangeRateSnapshot } from "@/lib/currency-conversions";
 
 const priceOptions: Record<DisplayCurrency, number[]> = {
-  JMD: [0, 1_000_000, 5_000_000, 10_000_000, 25_000_000, 50_000_000, 100_000_000, 250_000_000, 500_000_000],
-  USD: [0, 50_000, 100_000, 125_000, 150_000, 175_000, 200_000, 250_000, 300_000, 400_000, 500_000, 750_000, 1_000_000, 1_500_000, 2_000_000, 3_000_000, 5_000_000],
-  CAD: [0, 75_000, 100_000, 125_000, 150_000, 175_000, 200_000, 250_000, 300_000, 400_000, 500_000, 750_000, 1_000_000, 1_500_000, 2_000_000, 3_000_000, 5_000_000],
-  GBP: [0, 50_000, 75_000, 100_000, 125_000, 150_000, 175_000, 200_000, 250_000, 300_000, 400_000, 500_000, 750_000, 1_000_000, 1_500_000, 2_000_000, 3_000_000],
+  JMD: [0, 100_000, 250_000, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000, 20_000_000, 30_000_000, 50_000_000, 75_000_000, 100_000_000, 150_000_000, 200_000_000, 300_000_000, 500_000_000],
+  USD: [0, 25_000, 50_000, 75_000, 100_000, 125_000, 150_000, 200_000, 250_000, 300_000, 400_000, 500_000, 750_000, 1_000_000, 1_500_000, 2_000_000, 3_000_000, 5_000_000],
+  CAD: [0, 50_000, 75_000, 100_000, 125_000, 150_000, 200_000, 250_000, 300_000, 400_000, 500_000, 750_000, 1_000_000, 1_500_000, 2_000_000, 3_000_000, 5_000_000],
+  GBP: [0, 25_000, 50_000, 75_000, 100_000, 125_000, 150_000, 200_000, 250_000, 300_000, 400_000, 500_000, 750_000, 1_000_000, 1_500_000, 2_000_000],
 };
 
-export function CurrencyPriceRangeFields({ rates, initialCurrency = "JMD" }: { rates: ExchangeRateSnapshot | null; initialCurrency?: DisplayCurrency }) {
+export function CurrencyPriceRangeFields({ rates, initialCurrency = "JMD", initialMinimum = 0 }: { rates: ExchangeRateSnapshot | null; initialCurrency?: DisplayCurrency; initialMinimum?: number | null }) {
   const availableCurrencies = rates ? DISPLAY_CURRENCIES : ["JMD"];
   const [currency, setCurrency] = useState<DisplayCurrency>(availableCurrencies.includes(initialCurrency) ? initialCurrency : "JMD");
-  const [minimum, setMinimum] = useState(0);
-  const [maximum, setMaximum] = useState(() => priceOptions[currency].at(-1) ?? 0);
+  const [minimum, setMinimum] = useState(() => priceOptions[initialCurrency]?.includes(initialMinimum ?? 0) ? initialMinimum ?? 0 : 0);
   const options = priceOptions[currency];
-  const maximumOption = options.at(-1) ?? 0;
   const changeCurrency = (nextCurrency: DisplayCurrency) => {
     setCurrency(nextCurrency);
     setMinimum(0);
-    setMaximum(priceOptions[nextCurrency].at(-1) ?? 0);
   };
 
   return <>
     <label><span>Currency</span><select name="currency" value={currency} onChange={(event) => changeCurrency(event.target.value as DisplayCurrency)}>{availableCurrencies.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-    <label><span>Min price</span><select name="minPrice" value={minimum} onChange={(event) => setMinimum(Number(event.target.value))}>{options.map((amount) => <option key={amount} value={amount}>{formatCurrencyAmount(amount, currency)}</option>)}</select></label>
-    <label><span>Max price</span><select name="maxPrice" value={maximum === maximumOption ? `${maximumOption}+` : maximum} onChange={(event) => setMaximum(event.target.value.endsWith("+") ? maximumOption : Number(event.target.value))}>{options.slice(1).map((amount) => <option key={amount} value={amount === maximumOption ? `${amount}+` : amount}>{formatCurrencyAmount(amount, currency)}{amount === maximumOption ? "+" : ""}</option>)}</select></label>
+    <label><span>Price</span><select name="minPrice" value={minimum} onChange={(event) => setMinimum(Number(event.target.value))}>{options.map((amount) => <option key={amount} value={amount}>{amount === 0 ? "Any price" : `${formatCurrencyAmount(amount, currency)}+`}</option>)}</select></label>
   </>;
 }
